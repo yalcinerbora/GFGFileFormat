@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Source\GFG\GFGEnumerations.h" />
+    <ClInclude Include="..\..\..\Source\GFG\GFGConversion.h" />
+    <ClInclude Include="..\..\..\Source\GFG\GFGVertexElementTypes.h" />
+    <ClInclude Include="..\..\..\Source\GFG\GFGMeshHeader.h">
+      <Filter>HeaderStructs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\GFG\GFGMaterialHeader.h">
+      <Filter>HeaderStructs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\GFG\GFGAnimationHeader.h">
+      <Filter>HeaderStructs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\GFG\GFGSkeletonHeader.h">
+      <Filter>HeaderStructs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\GFG\GFGFileLoader.h" />
+    <ClInclude Include="..\..\..\Source\GFG\GFGHeader.h">
+      <Filter>HeaderStructs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\GFG\GFGFileExporter.h" />
+    <ClInclude Include="..\..\..\Source\GFG\GFGMaterialTypes.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Source\GFG\GFGConversion.cpp" />
+    <ClCompile Include="..\..\..\Source\GFG\GFGVertexElementTypes.cpp" />
+    <ClCompile Include="..\..\..\Source\GFG\GFGFileLoader.cpp" />
+    <ClCompile Include="..\..\..\Source\GFG\GFGHeader.cpp">
+      <Filter>HeaderStructs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\GFG\GFGFileExporter.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="HeaderStructs">
+      <UniqueIdentifier>{3ff4fa8a-9947-4770-a735-2ee21b0ea239}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

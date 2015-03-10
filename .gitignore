@@ -26,3 +26,21 @@
 *.exe
 *.out
 *.app
+
+# Windows Intellisense Database
+*.sdf
+
+# Binaries
+Bin/
+
+# Keep Provided Libraries
+!Lib/**/*.lai
+!Lib/**/*.la
+!Lib/**/*.a
+!Lib/**/*.lib
+
+!Lib/**/*.so
+!Lib/**/*.dvlib
+!Lib/**/*.dll
+
+!Lib/**/*.pch

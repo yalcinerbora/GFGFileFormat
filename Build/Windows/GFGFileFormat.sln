@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30723.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GFGMaya", "GFGMaya\GFGMaya.vcxproj", "{B4FC541C-B6B0-4207-B71B-06B284920FE5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GFGFileIO", "GFGFileIO\GFGFileIO.vcxproj", "{20BBDE07-9A5C-40FC-A85E-1F62D362E129}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+		ReleaseD|x64 = ReleaseD|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B4FC541C-B6B0-4207-B71B-06B284920FE5}.Debug|x64.ActiveCfg = Debug|x64
+		{B4FC541C-B6B0-4207-B71B-06B284920FE5}.Debug|x64.Build.0 = Debug|x64
+		{B4FC541C-B6B0-4207-B71B-06B284920FE5}.Release|x64.ActiveCfg = Release|x64
+		{B4FC541C-B6B0-4207-B71B-06B284920FE5}.Release|x64.Build.0 = Release|x64
+		{B4FC541C-B6B0-4207-B71B-06B284920FE5}.ReleaseD|x64.ActiveCfg = ReleaseD|x64
+		{B4FC541C-B6B0-4207-B71B-06B284920FE5}.ReleaseD|x64.Build.0 = ReleaseD|x64
+		{20BBDE07-9A5C-40FC-A85E-1F62D362E129}.Debug|x64.ActiveCfg = Debug|x64
+		{20BBDE07-9A5C-40FC-A85E-1F62D362E129}.Debug|x64.Build.0 = Debug|x64
+		{20BBDE07-9A5C-40FC-A85E-1F62D362E129}.Release|x64.ActiveCfg = Release|x64
+		{20BBDE07-9A5C-40FC-A85E-1F62D362E129}.Release|x64.Build.0 = Release|x64
+		{20BBDE07-9A5C-40FC-A85E-1F62D362E129}.ReleaseD|x64.ActiveCfg = Release|x64
+		{20BBDE07-9A5C-40FC-A85E-1F62D362E129}.ReleaseD|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

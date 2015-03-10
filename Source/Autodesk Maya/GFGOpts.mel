@@ -1,0 +1,1060 @@
+global proc GFGApplyOrderingsToSliders(int $orderingValues[], string $sliders[])
+{
+	for($index = 0; $index < size($orderingValues); $index++) 
+	{
+		intScrollBar -e -value $orderingValues[$index] $sliders[$index];
+	}
+}
+
+global proc string GFGPackGroupLayout(int $orderingValues[])
+{
+	string $values = "";
+	int $currentOrder = 0;
+	for($currentOrder = 0; $currentOrder < 8; $currentOrder++)
+	{
+		for($index = 0; $index < size($orderingValues); $index++)
+		{
+			if($orderingValues[$index] == $currentOrder)
+			{
+				if($currentOrder != 0)
+				{
+					$values = $values + "<";
+				}
+			
+				switch( $index ) 
+				{
+					case 0 :
+						$values = $values + "P";
+					break;
+					case 1 :
+						$values = $values + "N";
+					break;
+					case 2 :
+						$values = $values + "UV";
+					break;
+					case 3 :
+						$values = $values + "T";
+					break;
+					case 4 :
+						$values = $values + "B";
+					break;
+					case 5 :
+						$values = $values + "W";
+					break;
+					case 6 :
+						$values = $values + "WI";
+					break;
+					case 7 :
+						$values = $values + "C";
+					break;
+				}
+				break;
+			}
+		}
+	}
+	return $values;
+}
+
+global proc GFGUnpackGroupLayout( string $sliders[], string $orderingText, int $orderingValues[], string $ordering)
+{
+	string $orderList;
+	string $orderSplit[];
+	
+	$orderList = $ordering;
+	
+	tokenize($orderList, "<", $orderSplit);
+	
+	for($index = 0; $index < size($orderSplit); $index++)
+	{
+		if($orderSplit[$index] == "P")
+		{
+			$orderingValues[0] = $index;
+		}
+		else if($orderSplit[$index] == "N")
+		{
+			$orderingValues[1] = $index;
+		}
+		else if($orderSplit[$index] == "UV")
+		{
+			$orderingValues[2] = $index;
+		}
+		else if($orderSplit[$index] == "T")
+		{
+			$orderingValues[3] = $index;
+		}
+		else if($orderSplit[$index] == "B")
+		{
+			$orderingValues[4] = $index;
+		}
+		else if($orderSplit[$index] == "W")
+		{
+			$orderingValues[5] = $index;
+		}
+		else if($orderSplit[$index] == "WI")
+		{
+			$orderingValues[6] = $index;
+		}
+		else if($orderSplit[$index] == "C")
+		{
+			$orderingValues[7] = $index;
+		}
+	}
+	
+	GFGApplyOrderingsToSliders($orderingValues, $sliders);
+	text -e -l ("Current Ordering: " +  $orderList) $orderingText;
+}
+
+global proc GFGAdjustSlider(int $value, int $orderingValues[], int $pos, string $sliders[], string $orderingText)
+{
+	// Check the old value
+	if($value > $orderingValues[$pos])
+	{
+		// Old value is smaller
+		for($index = 0; $index < size($orderingValues); $index++)
+		{
+			if($orderingValues[$index] == $value)
+			{
+				$orderingValues[$index] = $orderingValues[$index] - 1;
+			}
+		}
+	}
+	else
+	{
+		// Old value is larger
+		for($index = 0; $index < size($orderingValues); $index++)
+		{
+			if($orderingValues[$index] == $value)
+			{
+				$orderingValues[$index] = $orderingValues[$index] + 1;
+			}
+		}
+	}
+	$orderingValues[$pos] = $value;
+	GFGApplyOrderingsToSliders($orderingValues, $sliders);
+	text -e -l ("Current Ordering: " +  GFGPackGroupLayout($orderingValues)) $orderingText;
+}
+
+global proc int GFGOpts ( string $parent,
+						  string $action,
+						  string $initialSettings,
+						  string $resultCallback )
+//
+//	Description:
+//		This script posts the GFG file translator options.
+//		The optionsString is of the form:
+//			varName1=value1;varName2=value2;...
+//
+//	Parameters:
+//		$parent	- the elf parent layout for this options layout. It is
+//					always a scrollLayout.
+//		$action	- the action that is to be performed with this invokation
+//					of this proc. Valid options are:
+//						"query" - construct the options string and pass it
+//									to the resultCallback.
+//						"post"	- post all the elf controls.
+//		$initialSettings - the current options string in effect at the
+//						   time this script is invoked.
+//		$resultCallback	-
+//				This is the proc to be called with the result string. 
+//				resultCallback ( string $optionsString )
+//
+//	Returns:
+//		1 if successfull.
+//		0 otherwise.
+//
+{
+	// GFG Export Data Types
+	string $gfgDataTypes[];
+	$gfgDataTypes[0] = "HALF_1";
+	$gfgDataTypes[1] = "HALF_2";
+	$gfgDataTypes[2] = "HALF_3";
+	$gfgDataTypes[3] = "HALF_4";
+
+	$gfgDataTypes[4] = "FLOAT_1";
+	$gfgDataTypes[5] = "FLOAT_2";
+	$gfgDataTypes[6] = "FLOAT_3";
+	$gfgDataTypes[7] = "FLOAT_4";
+
+	$gfgDataTypes[8] = "DOUBLE_1";
+	$gfgDataTypes[9] = "DOUBLE_2";
+	$gfgDataTypes[10] = "DOUBLE_3";
+	$gfgDataTypes[11] = "DOUBLE_4";
+
+	$gfgDataTypes[12] = "QUADRUPLE_1";
+	$gfgDataTypes[13] = "QUADRUPLE_2";
+	$gfgDataTypes[14] = "QUADRUPLE_3";
+	$gfgDataTypes[15] = "QUADRUPLE_4";
+
+	$gfgDataTypes[16] = "INT8_1";
+	$gfgDataTypes[17] = "INT8_2";
+	$gfgDataTypes[18] = "INT8_3";
+	$gfgDataTypes[19] = "INT8_4";
+
+	$gfgDataTypes[20] = "UINT8_1";
+	$gfgDataTypes[21] = "UINT8_2";
+	$gfgDataTypes[22] = "UINT8_3";
+	$gfgDataTypes[23] = "UINT8_4";
+
+	$gfgDataTypes[24] = "INT16_1";
+	$gfgDataTypes[25] = "INT16_2";
+	$gfgDataTypes[26] = "INT16_3";
+	$gfgDataTypes[27] = "INT16_4";
+
+	$gfgDataTypes[28] = "UINT16_1";
+	$gfgDataTypes[29] = "UINT16_2";
+	$gfgDataTypes[30] = "UINT16_3";
+	$gfgDataTypes[31] = "UINT16_4";
+
+	$gfgDataTypes[32] = "INT32_1";
+	$gfgDataTypes[33] = "INT32_2";
+	$gfgDataTypes[34] = "INT32_3";
+	$gfgDataTypes[35] = "INT32_4";
+
+	$gfgDataTypes[36] = "UINT32_1";
+	$gfgDataTypes[37] = "UINT32_2";
+	$gfgDataTypes[38] = "UINT32_3";
+	$gfgDataTypes[39] = "UINT32_4";
+
+	$gfgDataTypes[40] = "INT64_1";
+	$gfgDataTypes[41] = "INT64_2";
+	$gfgDataTypes[42] = "INT64_3";
+	$gfgDataTypes[43] = "INT64_4";
+
+	$gfgDataTypes[44] = "UINT64_1";
+	$gfgDataTypes[45] = "UINT64_2";
+	$gfgDataTypes[46] = "UINT64_3";
+	$gfgDataTypes[47] = "UINT64_4";
+
+	$gfgDataTypes[48] = "NORM8_1";
+	$gfgDataTypes[49] = "NORM8_2";
+	$gfgDataTypes[50] = "NORM8_3";
+	$gfgDataTypes[51] = "NORM8_4";
+
+	$gfgDataTypes[52] = "UNORM8_1";
+	$gfgDataTypes[53] = "UNORM8_2";
+	$gfgDataTypes[54] = "UNORM8_3";
+	$gfgDataTypes[55] = "UNORM8_4";
+
+	$gfgDataTypes[56] = "NORM16_1";
+	$gfgDataTypes[57] = "NORM16_2";
+	$gfgDataTypes[58] = "NORM16_3";
+	$gfgDataTypes[59] = "NORM16_4";
+
+	$gfgDataTypes[60] = "UNORM16_1";
+	$gfgDataTypes[61] = "UNORM16_2";
+	$gfgDataTypes[62] = "UNORM16_3";
+	$gfgDataTypes[63] = "UNORM16_4";
+
+	$gfgDataTypes[64] = "NORM32_1";
+	$gfgDataTypes[65] = "NORM32_2";
+	$gfgDataTypes[66] = "NORM32_3";
+	$gfgDataTypes[67] = "NORM32_4";
+
+	$gfgDataTypes[68] = "UNORM32_1";
+	$gfgDataTypes[69] = "UNORM32_2";
+	$gfgDataTypes[70] = "UNORM32_3";
+	$gfgDataTypes[71] = "UNORM32_4";
+
+	$gfgDataTypes[72] = "INT_2_10_10_10";
+	$gfgDataTypes[73] = "UINT_2_10_10_10";
+	$gfgDataTypes[74] = "UINT_10F_11F_11F";
+
+	$gfgDataTypes[75] = "CUSTOM_1_15F_16";
+	$gfgDataTypes[76] = "CUSTOM_TANG_2F_H";
+	$gfgDataTypes[77] = "UNORM8_4_4";
+	$gfgDataTypes[78] =	"UNORM16_2_4";
+	$gfgDataTypes[79] =	"UINT8_4_4";
+	$gfgDataTypes[80] =	"UINT16_2_4";
+
+	string $weightIndexingTypes[];
+	$weightIndexingTypes[0] = "BFS Alphabetical";
+	$weightIndexingTypes[1] = "BFS Default";
+	$weightIndexingTypes[2] = "DFS Alphabetical";
+	$weightIndexingTypes[3] = "DFS Default";
+	
+	string $indexDataTypes[];
+	$indexDataTypes[0] = "UINT8";
+	$indexDataTypes[1] = "UINT16";
+	$indexDataTypes[2] = "UINT32";
+	
+	string $headerSting = "\"GPU Friendly Graphics\" File Format Exporter";
+	
+	// Option Saver
+	string $currentOptions;
+	
+	// Layout Stuff
+	int	$frameLayoutWidth = 490;
+	int $checkBoxLeftPad = 175;
+	int $comboBoxLeftPad = 125;
+	
+	int $groupingOrderTexWidth = 90;
+	int $groupingOrderSliderWidth = 400;
+	
+	int	$index;
+	int	$bResult = 1;
+	
+	// Interactive Ordering
+	global int $GFGorderingValues[];
+	$GFGorderingValues[0] = 0;		// Stores P
+	$GFGorderingValues[1] = 1;		// Stores N
+	$GFGorderingValues[2] = 2;		// Stores UV
+	$GFGorderingValues[3] = 3;		// Stores T
+	$GFGorderingValues[4] = 4;		// Stores B
+	$GFGorderingValues[5] = 5;		// Stores W
+	$GFGorderingValues[6] = 6;		// Stores WI
+	$GFGorderingValues[7] = 7;		// Stores C
+	
+	global string $GFGsliders[];
+	global string $GFGorderingText;
+	
+	// Sow Options
+	if ($action == "post") 
+	{
+		setParent $parent;
+
+		columnLayout -adjustableColumn true;
+		text -l $headerSting;
+		text -l "For more information visit";
+		text -hl true -l "http://yalcinerbora.github.io/GFG/";
+		separator -style "none" -h 10;
+		// Vertex Export
+		frameLayout -label "Vertex Component Export" -collapsable false -borderStyle "etchedIn"; 
+			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
+				checkBox -label ("Export Normals") normOn;
+				checkBox -label ("Export UVs") uvOn;
+				checkBox -label ("Export Tangents") tangOn;
+				checkBox -label ("Export Binormals") binormOn;
+				checkBox -label ("Export Weights") weightOn;
+				checkBox -label ("Export Color") colorOn;
+			setParent ..;
+		setParent ..;
+		// Materials
+		frameLayout -label "Material Export" -collapsable true -borderStyle "etchedIn"; 
+			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
+				checkBox -label ("Export Materials") matOn;
+				checkBox -label ("Empty Materials") matEmpty;
+			setParent ..;
+		setParent ..;
+		// Skeleton
+		frameLayout -label "Skeleton Export" -collapsable true -borderStyle "etchedIn"; 
+			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
+				checkBox -label ("Export Skeleton") skelOn;
+			setParent ..;
+		setParent ..;
+		// Hierarchy
+		frameLayout -label "Hierarchy Export" -collapsable true -borderStyle "etchedIn"; 
+			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
+				checkBox -label ("Export Hierarchy") hierOn;
+			setParent ..;
+		setParent ..;
+		// Index
+		frameLayout -label "Index Size" -collapsable true -borderStyle "etchedIn";
+			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
+				optionMenu -label "Index Data Type:" iData;
+					for ($index = 0; $index < size($indexDataTypes); $index++) 
+					{
+						menuItem -label $indexDataTypes[$index];
+					}
+			setParent ..;
+		setParent ..;
+		// Vertex Component Data Types
+		frameLayout -label "Vertex Component Data Types" -collapsable true -borderStyle "etchedIn"; 
+			columnLayout -cal "center" -rowSpacing 5;
+				// Position
+				frameLayout -w $frameLayoutWidth -label "Vertex Position" -collapsable true -borderStyle "etchedIn"; 
+					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
+						optionMenu -label "Position Data Type:" vData;
+							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							{
+								if ($gfgDataTypes[$index] == "HALF_3" ||
+									$gfgDataTypes[$index] == "FLOAT_3" ||
+									$gfgDataTypes[$index] == "DOUBLE_3" //||
+									//$gfgDataTypes[$index] == "QUADRUPLE_3"
+									)
+								{
+									menuItem -label $gfgDataTypes[$index];
+								}
+								else
+								{
+									menuItem -en false -label $gfgDataTypes[$index];
+								}
+							}						
+						intFieldGrp -numberOfFields 1
+							-label "Position Grouping:" 
+							-value1 0
+							vLayout;
+					setParent ..;
+				setParent ..;
+				// Normal
+				frameLayout -w $frameLayoutWidth -label "Vertex Normal" -collapsable true -borderStyle "etchedIn"; 
+					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
+						optionMenu -label "Normal Data Type:" vnData;
+							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							{
+								if ($gfgDataTypes[$index] == "HALF_2" ||
+									$gfgDataTypes[$index] == "HALF_3" ||
+									$gfgDataTypes[$index] == "FLOAT_2" ||
+									$gfgDataTypes[$index] == "FLOAT_3" ||
+									$gfgDataTypes[$index] == "DOUBLE_2" ||
+									$gfgDataTypes[$index] == "DOUBLE_3" ||
+									//$gfgDataTypes[$index] == "QUADRUPLE_2" ||
+									//$gfgDataTypes[$index] == "QUADRUPLE_3" ||
+									$gfgDataTypes[$index] == "NORM8_2" ||
+									$gfgDataTypes[$index] == "NORM8_3" ||
+									$gfgDataTypes[$index] == "NORM16_2" ||
+									$gfgDataTypes[$index] == "NORM16_3" ||
+									$gfgDataTypes[$index] == "NORM32_2" ||
+									$gfgDataTypes[$index] == "NORM32_3" ||
+									$gfgDataTypes[$index] == "INT_2_10_10_10" ||
+									$gfgDataTypes[$index] == "CUSTOM_1_15N_16N")
+								{
+									menuItem -label $gfgDataTypes[$index];
+								}
+								else
+								{
+									menuItem -en false -label $gfgDataTypes[$index];
+								}
+							}						
+						intFieldGrp -numberOfFields 1
+							-label "Normal Grouping:" 
+							-value1 0
+							vnLayout;
+					setParent ..;
+				setParent ..;
+				// UVs
+				frameLayout -w $frameLayoutWidth -label "Vertex UV" -collapsable true -borderStyle "etchedIn"; 
+					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
+						optionMenu -label "UV Data Type:" vuvData;
+							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							{
+								if ($gfgDataTypes[$index] == "HALF_2" ||
+									$gfgDataTypes[$index] == "FLOAT_2" ||
+									$gfgDataTypes[$index] == "DOUBLE_2" ||
+									//$gfgDataTypes[$index] == "QUADRUPLE_2" ||
+									$gfgDataTypes[$index] == "NORM8_2" ||
+									$gfgDataTypes[$index] == "NORM16_2" ||
+									$gfgDataTypes[$index] == "NORM32_2" ||
+									$gfgDataTypes[$index] == "INT_2_10_10_10")
+								{
+									menuItem -label $gfgDataTypes[$index];
+								}
+								else
+								{
+									menuItem -en false -label $gfgDataTypes[$index];
+								}
+							}						
+						intFieldGrp -numberOfFields 1
+							-label "UV Grouping:" 
+							-value1 0
+							vuvLayout;
+					setParent ..;
+				setParent ..;
+				// Tangent
+				frameLayout -w $frameLayoutWidth -label "Vertex Tangent" -collapsable true -borderStyle "etchedIn"; 
+					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
+						optionMenu -label "Tangent Data Type:" vtData;
+							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							{
+								if ($gfgDataTypes[$index] == "HALF_2" ||
+									$gfgDataTypes[$index] == "HALF_3" ||
+									$gfgDataTypes[$index] == "FLOAT_2" ||
+									$gfgDataTypes[$index] == "FLOAT_3" ||
+									$gfgDataTypes[$index] == "DOUBLE_2" ||
+									$gfgDataTypes[$index] == "DOUBLE_3" ||
+									//$gfgDataTypes[$index] == "QUADRUPLE_2" ||
+									//$gfgDataTypes[$index] == "QUADRUPLE_3" ||
+									$gfgDataTypes[$index] == "NORM8_2" ||
+									$gfgDataTypes[$index] == "NORM8_3" ||
+									$gfgDataTypes[$index] == "NORM16_2" ||
+									$gfgDataTypes[$index] == "NORM16_3" ||
+									$gfgDataTypes[$index] == "NORM32_2" ||
+									$gfgDataTypes[$index] == "NORM32_3" ||
+									$gfgDataTypes[$index] == "INT_2_10_10_10" ||
+									$gfgDataTypes[$index] == "CUSTOM_1_15N_16N")
+								{
+									menuItem -label $gfgDataTypes[$index];
+								}
+								else
+								{
+									menuItem -en false -label $gfgDataTypes[$index];
+								}
+							}						
+						intFieldGrp -numberOfFields 1
+							-label "Tangent Grouping:" 
+							-value1 0
+							vtLayout;
+					setParent ..;
+				setParent ..;
+				// Binormal
+				frameLayout -w $frameLayoutWidth -label "Vertex Binormal" -collapsable true -borderStyle "etchedIn"; 
+					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
+						optionMenu -label "Binormal Data Type:" vbnData;
+							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							{
+								if ($gfgDataTypes[$index] == "HALF_2" ||
+									$gfgDataTypes[$index] == "HALF_3" ||
+									$gfgDataTypes[$index] == "FLOAT_2" ||
+									$gfgDataTypes[$index] == "FLOAT_3" ||
+									$gfgDataTypes[$index] == "DOUBLE_2" ||
+									$gfgDataTypes[$index] == "DOUBLE_3" ||
+									//$gfgDataTypes[$index] == "QUADRUPLE_2" ||
+									//$gfgDataTypes[$index] == "QUADRUPLE_3" ||
+									$gfgDataTypes[$index] == "NORM8_2" ||
+									$gfgDataTypes[$index] == "NORM8_3" ||
+									$gfgDataTypes[$index] == "NORM16_2" ||
+									$gfgDataTypes[$index] == "NORM16_3" ||
+									$gfgDataTypes[$index] == "NORM32_2" ||
+									$gfgDataTypes[$index] == "NORM32_3" ||
+									$gfgDataTypes[$index] == "INT_2_10_10_10" ||
+									$gfgDataTypes[$index] == "CUSTOM_1_15N_16N")
+								{
+									menuItem -label $gfgDataTypes[$index];
+								}
+								else
+								{
+									menuItem -en false -label $gfgDataTypes[$index];
+								}
+							}						
+						intFieldGrp -numberOfFields 1
+							-label "Binormal Grouping:" 
+							-value1 0
+							vbnLayout;
+					setParent ..;
+				setParent ..;
+				// Weights
+				frameLayout -w $frameLayoutWidth -label "Vertex Weight" -collapsable true -borderStyle "etchedIn"; 
+					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
+						optionMenu -label "Weight Data Type:" vwData;
+							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							{
+								if ($gfgDataTypes[$index] == "HALF_1" ||
+									$gfgDataTypes[$index] == "HALF_2" ||
+									$gfgDataTypes[$index] == "HALF_3" ||
+									$gfgDataTypes[$index] == "HALF_4" ||
+									$gfgDataTypes[$index] == "FLOAT_1" ||
+									$gfgDataTypes[$index] == "FLOAT_2" ||
+									$gfgDataTypes[$index] == "FLOAT_3" ||
+									$gfgDataTypes[$index] == "FLOAT_4" ||
+									$gfgDataTypes[$index] == "DOUBLE_1" ||
+									$gfgDataTypes[$index] == "DOUBLE_2" ||
+									$gfgDataTypes[$index] == "DOUBLE_3" ||
+									$gfgDataTypes[$index] == "DOUBLE_4" ||
+									//$gfgDataTypes[$index] == "QUADRUPLE_1" ||
+									//$gfgDataTypes[$index] == "QUADRUPLE_2" ||
+									//$gfgDataTypes[$index] == "QUADRUPLE_3" ||
+									//$gfgDataTypes[$index] == "QUADRUPLE_4" ||
+									$gfgDataTypes[$index] == "UNORM8_1" ||
+									$gfgDataTypes[$index] == "UNORM8_2" ||
+									$gfgDataTypes[$index] == "UNORM8_3" ||
+									$gfgDataTypes[$index] == "UNORM8_4" ||
+									$gfgDataTypes[$index] == "UNORM16_1" ||
+									$gfgDataTypes[$index] == "UNORM16_2" ||
+									$gfgDataTypes[$index] == "UNORM16_3" ||
+									$gfgDataTypes[$index] == "UNORM16_4" ||
+									$gfgDataTypes[$index] == "UNORM32_1" ||
+									$gfgDataTypes[$index] == "UNORM32_2" ||
+									$gfgDataTypes[$index] == "UNORM32_3" ||
+									$gfgDataTypes[$index] == "UNORM32_4" ||
+									$gfgDataTypes[$index] == "UNORM16_2_4" ||
+									$gfgDataTypes[$index] == "UNORM8_4_4")
+								{
+									menuItem -label $gfgDataTypes[$index];
+								}
+								else
+								{
+									menuItem -en false -label $gfgDataTypes[$index];
+								}
+							}
+						intFieldGrp -numberOfFields 1
+							-label "Weight Grouping:" 
+							-value1 0
+							vwLayout;
+						separator -w 250 -style "in";	
+						optionMenu -label "Weight Index Data Type:" vwiData;
+							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							{
+								if ($gfgDataTypes[$index] == "UINT8_1" ||
+									$gfgDataTypes[$index] == "UINT8_2" ||
+									$gfgDataTypes[$index] == "UINT8_3" ||
+									$gfgDataTypes[$index] == "UINT8_4" ||
+									$gfgDataTypes[$index] == "UINT16_1" ||
+									$gfgDataTypes[$index] == "UINT16_2" ||
+									$gfgDataTypes[$index] == "UINT16_3" ||
+									$gfgDataTypes[$index] == "UINT16_4" ||
+									$gfgDataTypes[$index] == "UINT32_1" ||
+									$gfgDataTypes[$index] == "UINT32_2" ||
+									$gfgDataTypes[$index] == "UINT32_3" ||
+									$gfgDataTypes[$index] == "UINT32_4" ||
+									$gfgDataTypes[$index] == "UINT_2_10_10_10" ||
+									$gfgDataTypes[$index] == "UINT16_2_4" ||
+									$gfgDataTypes[$index] == "UINT8_4_4")
+								{
+									menuItem -label $gfgDataTypes[$index];
+								}
+								else
+								{
+									menuItem -en false -label $gfgDataTypes[$index];
+								}
+							}						
+						intFieldGrp -numberOfFields 1
+							-label "Weight Index Grouping:" 
+							-value1 0
+							vwiLayout;
+						separator -w 250 -style "in";	
+						optionMenu -label "Bone Indexing Method:" boneIndex;
+							for ($index = 0; $index < size($weightIndexingTypes); $index++) 
+							{
+								menuItem -label $weightIndexingTypes[$index];
+							}
+					setParent ..;
+					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" ($comboBoxLeftPad - 100);
+						intSliderGrp -label "Influence Count" -field true
+							-minValue 1 -maxValue 8
+							-value 4
+							influence;
+					setParent ..;
+				setParent ..;
+				// Color
+				frameLayout -w $frameLayoutWidth -label "Vertex Color" -collapsable true -borderStyle "etchedIn"; 
+					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
+						optionMenu -label "Color Data Type:" vcData;
+							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							{
+								if ($gfgDataTypes[$index] == "HALF_3" ||
+									$gfgDataTypes[$index] == "FLOAT_3" ||
+									$gfgDataTypes[$index] == "DOUBLE_3" ||
+									//$gfgDataTypes[$index] == "QUADRUPLE_3" ||
+									$gfgDataTypes[$index] == "UNORM8_3" ||
+									$gfgDataTypes[$index] == "UNORM16_3" ||
+									$gfgDataTypes[$index] == "UNORM32_3" ||
+									//$gfgDataTypes[$index] == "UINT_10F_11F_11F" ||
+									$gfgDataTypes[$index] == "UINT_2_10_10_10" 
+									)
+								{
+									menuItem -label $gfgDataTypes[$index];
+								}
+								else
+								{
+									menuItem -en false -label $gfgDataTypes[$index];
+								}
+							}						
+						intFieldGrp -numberOfFields 1
+							-label "Color Grouping:" 
+							-value1 0
+							vcLayout;
+					setParent ..;
+				setParent ..;
+			setParent ..;
+		setParent ..;
+				
+		// Vertex Grouping
+		frameLayout -label "Vertex Component Ordering" -collapsable true -borderStyle "etchedIn"; 
+			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" 20;
+				rowLayout -numberOfColumns 2 -columnWidth2 50 $groupingOrderSliderWidth;
+					text -label "P:";
+					$GFGsliders[0] = `intScrollBar -w $groupingOrderSliderWidth -min 0 -max 7 -value 0 -step 1 -largeStep 1 -cc "GFGAdjustSlider #1 $GFGorderingValues 0 $GFGsliders $GFGorderingText"`;
+				setParent ..;
+				rowLayout -numberOfColumns 2 -columnWidth2 50 $groupingOrderSliderWidth;
+					text -label "N:";
+					$GFGsliders[1] = `intScrollBar -w $groupingOrderSliderWidth -min 0 -max 7 -value 1 -step 1 -largeStep 1 -cc "GFGAdjustSlider #1 $GFGorderingValues 1 $GFGsliders $GFGorderingText"`;
+				setParent ..;
+				rowLayout -numberOfColumns 2 -columnWidth2 50 $groupingOrderSliderWidth;
+					text -label "UV:";
+					$GFGsliders[2] = `intScrollBar -w $groupingOrderSliderWidth -min 0 -max 7 -value 2 -step 1 -largeStep 1 -cc "GFGAdjustSlider #1 $GFGorderingValues 2 $GFGsliders $GFGorderingText"`;
+				setParent ..;
+				rowLayout -numberOfColumns 2 -columnWidth2 50 $groupingOrderSliderWidth;
+					text -label "T:";
+					$GFGsliders[3] = `intScrollBar -w $groupingOrderSliderWidth -min 0 -max 7 -value 3 -step 1 -largeStep 1 -cc "GFGAdjustSlider #1 $GFGorderingValues 3 $GFGsliders $GFGorderingText"`;
+				setParent ..;
+				rowLayout -numberOfColumns 2 -columnWidth2 50 $groupingOrderSliderWidth;
+					text -label "B:";
+					$GFGsliders[4] = `intScrollBar -w $groupingOrderSliderWidth -min 0 -max 7 -value 4 -step 1 -largeStep 1 -cc "GFGAdjustSlider #1 $GFGorderingValues 4 $GFGsliders $GFGorderingText"`;
+				setParent ..;
+				rowLayout -numberOfColumns 2 -columnWidth2 50 $groupingOrderSliderWidth;
+					text -label "W:";
+					$GFGsliders[5] = `intScrollBar -w $groupingOrderSliderWidth -min 0 -max 7 -value 5 -step 1 -largeStep 1 -cc "GFGAdjustSlider #1 $GFGorderingValues 5 $GFGsliders $GFGorderingText"`;
+				setParent ..;
+				rowLayout -numberOfColumns 2 -columnWidth2 50 $groupingOrderSliderWidth;
+					text -label "WI:";
+					$GFGsliders[6] = `intScrollBar -w $groupingOrderSliderWidth -min 0 -max 7 -value 6 -step 1 -largeStep 1 -cc "GFGAdjustSlider #1 $GFGorderingValues 6 $GFGsliders $GFGorderingText"`;
+				setParent ..;
+				rowLayout -numberOfColumns 2 -columnWidth2 50 $groupingOrderSliderWidth;
+					text -label "C:";
+					$GFGsliders[7] = `intScrollBar -w $groupingOrderSliderWidth -min 0 -max 7 -value 7 -step 1 -largeStep 1 -cc "GFGAdjustSlider #1 $GFGorderingValues 7 $GFGsliders $GFGorderingText"`;
+				setParent ..;
+				$GFGorderingText = `text -w 470 -al "center" -label "Current Ordering: P<N<UV<T<B<W<WI<C" textOrderLabel`;
+		
+		// All Done Finally Now Populate
+		// Default Write Options
+		string $optionList[];
+		string $optionBreakDown[];
+	
+		$currentOptions = $initialSettings;
+		
+		if (size($currentOptions) > 0) 
+		{
+			// Split from;
+			tokenize($currentOptions, ";", $optionList);
+			for ($index = 0; $index < size($optionList); $index++) 
+			{
+				tokenize($optionList[$index], "=", $optionBreakDown);
+				
+				// Export Normals
+				if ($optionBreakDown[0] == "normOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false normOn;
+					} 
+					else 
+					{
+						checkBox -e -v true normOn;
+					}
+				} 
+				// Export UVs
+				else if ($optionBreakDown[0] == "uvOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false uvOn;
+					} 
+					else 
+					{
+						checkBox -e -v true uvOn;
+					}
+				}
+				// Export Tangents
+				else if ($optionBreakDown[0] == "tangOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false tangOn;
+					} 
+					else 
+					{
+						checkBox -e -v true tangOn;
+					}
+				}
+				// Export Binormals
+				else if ($optionBreakDown[0] == "binormOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false binormOn;
+					} 
+					else 
+					{
+						checkBox -e -v true binormOn;
+					}
+				}
+				// Export Weights
+				else if ($optionBreakDown[0] == "weightOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false weightOn;
+					} 
+					else 
+					{
+						checkBox -e -v true weightOn;
+					}
+				}
+				// Export Colors
+				else if ($optionBreakDown[0] == "colorOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false colorOn;
+					} 
+					else 
+					{
+						checkBox -e -v true colorOn;
+					}
+				}
+				// Material Related
+				// Export Materials
+				else if ($optionBreakDown[0] == "matOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false matOn;
+					} 
+					else 
+					{
+						checkBox -e -v true matOn;
+					}
+				}
+				// Export Materials as Empty
+				else if ($optionBreakDown[0] == "matEmpty") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false matEmpty;
+					} 
+					else 
+					{
+						checkBox -e -v true matEmpty;
+					}
+				}
+				// Misc
+				// Export Hierarchy
+				else if ($optionBreakDown[0] == "hierOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false hierOn;
+					} 
+					else 
+					{
+						checkBox -e -v true hierOn;
+					}
+				}
+				// Index Data Type
+				else if ($optionBreakDown[0] == "iData") 
+				{
+					optionMenu -e -sl (((int)$optionBreakDown[1])+1) iData;
+				}
+				
+				// Export Skeletons
+				else if ($optionBreakDown[0] == "skelOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false skelOn;
+					} 
+					else 
+					{
+						checkBox -e -v true skelOn;
+					}
+				}
+				//***************************//
+				// Vertex
+				// Position Options
+				else if ($optionBreakDown[0] == "vData") 
+				{
+					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vData;
+				}
+				else if ($optionBreakDown[0] == "vLayout") 
+				{
+					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vLayout;
+				}
+				// Nromal Options
+				else if ($optionBreakDown[0] == "vnData") 
+				{
+					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vnData;
+				}
+				else if ($optionBreakDown[0] == "vnLayout") 
+				{
+					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vnLayout;
+				}
+				// UV Options
+				else if ($optionBreakDown[0] == "vuvData") 
+				{
+					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vuvData;
+				}
+				else if ($optionBreakDown[0] == "vuvLayout") 
+				{
+					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vuvLayout;
+				}
+				// Tangent Options
+				else if ($optionBreakDown[0] == "vtData") 
+				{
+					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vtData;
+				}
+				else if ($optionBreakDown[0] == "vtLayout") 
+				{
+					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vtLayout;
+				}
+				// Binormal Options
+				else if ($optionBreakDown[0] == "vbnData") 
+				{
+					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vbnData;
+				}
+				else if ($optionBreakDown[0] == "vbnLayout") 
+				{
+					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vbnLayout;
+				}
+				// Weight Options
+				else if ($optionBreakDown[0] == "vwData") 
+				{
+					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vwData;
+				}
+				else if ($optionBreakDown[0] == "vwLayout") 
+				{
+					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vwLayout;
+				}
+				else if ($optionBreakDown[0] == "vwiData") 
+				{
+					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vwiData;
+				}
+				else if ($optionBreakDown[0] == "vwiLayout") 
+				{
+					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vwiLayout;
+				}
+				else if ($optionBreakDown[0] == "boneTraversal") 
+				{
+					optionMenu -e -sl ((int)$optionBreakDown[1]+1) boneIndex;
+				}
+				else if ($optionBreakDown[0] == "influence") 
+				{
+					intSliderGrp -e -value ((int)$optionBreakDown[1]) influence;
+				}
+				// Color Options
+				else if ($optionBreakDown[0] == "vcData") 
+				{
+					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vcData;
+				}
+				else if ($optionBreakDown[0] == "vcLayout") 
+				{
+					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vcLayout;
+				}
+				else if ($optionBreakDown[0] == "groupLayout") 
+				{
+					// Adjust Slider According to the string
+					GFGUnpackGroupLayout($GFGsliders, $GFGorderingText, $GFGorderingValues, $optionBreakDown[1]);
+				}
+			}
+		}
+		$bResult = 1;
+	} 
+	// Write Options
+	else if ($action == "query") 
+	{
+		// Normal Export
+		if (`checkBox -q -v normOn`)
+		{
+			$currentOptions = $currentOptions + "normOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + "normOn=0";
+		}
+		// UV Export
+		if (`checkBox -q -v uvOn`)
+		{
+			$currentOptions = $currentOptions + ";uvOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";uvOn=0";
+		}
+		// Tangent Export
+		if (`checkBox -q -v tangOn`)
+		{
+			$currentOptions = $currentOptions + ";tangOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";tangOn=0";
+		}
+		// Binormal Export
+		if (`checkBox -q -v binormOn`)
+		{
+			$currentOptions = $currentOptions + ";binormOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";binormOn=0";
+		}
+		// Weight Export
+		if (`checkBox -q -v weightOn`)
+		{
+			$currentOptions = $currentOptions + ";weightOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";weightOn=0";
+		}
+		// Color Export
+		if (`checkBox -q -v colorOn`)
+		{
+			$currentOptions = $currentOptions + ";colorOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";colorOn=0";
+		}
+		// Material Options
+		// Material Export
+		if (`checkBox -q -v matOn`)
+		{
+			$currentOptions = $currentOptions + ";matOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";matOn=0";
+		}
+		// Empty Materials
+		if (`checkBox -q -v matEmpty`)
+		{
+			$currentOptions = $currentOptions + ";matEmpty=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";matEmpty=0";
+		}
+		// Misc
+		// Hierarcy Export
+		if (`checkBox -q -v hierOn`)
+		{
+			$currentOptions = $currentOptions + ";hierOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";hierOn=0";
+		}
+		// Skeleton Export
+		if (`checkBox -q -v skelOn`)
+		{
+			$currentOptions = $currentOptions + ";skelOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";skelOn=0";
+		}
+		// Index Data
+		$currentOptions = $currentOptions + ";iData=" + (`optionMenu -q -sl iData` - 1);
+		//***************************//
+		// Vertex
+		// Position Options
+		$currentOptions = $currentOptions + ";vData=" + (`optionMenu -q -sl vData` - 1);
+		$currentOptions = $currentOptions + ";vLayout=" + `intFieldGrp -q -v1 vLayout`;
+		// Normal Options
+		$currentOptions = $currentOptions + ";vnData=" + (`optionMenu -q -sl vnData` - 1);
+		$currentOptions = $currentOptions + ";vnLayout=" + `intFieldGrp -q -v1 vnLayout`;
+		// UV Options
+		$currentOptions = $currentOptions + ";vuvData=" + (`optionMenu -q -sl vuvData` - 1);
+		$currentOptions = $currentOptions + ";vuvLayout=" + `intFieldGrp -q -v1 vuvLayout`;
+		// Tangent Options
+		$currentOptions = $currentOptions + ";vtData=" + (`optionMenu -q -sl vtData` - 1);
+		$currentOptions = $currentOptions + ";vtLayout=" + `intFieldGrp -q -v1 vtLayout`;
+		// Binromal Options
+		$currentOptions = $currentOptions + ";vbnData=" + (`optionMenu -q -sl vbnData` - 1);
+		$currentOptions = $currentOptions + ";vbnLayout=" + `intFieldGrp -q -v1 vbnLayout`;
+		// Weight Options
+		$currentOptions = $currentOptions + ";vwData=" + (`optionMenu -q -sl vwData` - 1);
+		$currentOptions = $currentOptions + ";vwLayout=" + `intFieldGrp -q -v1 vwLayout`;
+		
+		$currentOptions = $currentOptions + ";vwiData=" + (`optionMenu -q -sl vwiData` - 1);
+		$currentOptions = $currentOptions + ";vwiLayout=" + `intFieldGrp -q -v1 vwiLayout`;
+		
+		$currentOptions = $currentOptions + ";boneTraversal=" + (`optionMenu -q -sl boneIndex` - 1);
+		$currentOptions = $currentOptions + ";influence=" + `intSliderGrp -q -value influence`;
+		
+		// Color Options
+		$currentOptions = $currentOptions + ";vcData=" + (`optionMenu -q -sl vcData` - 1);
+		$currentOptions = $currentOptions + ";vcLayout=" + `intFieldGrp -q -v1 vcLayout`;
+		
+		string $labelAll = `text -q -l textOrderLabel`;
+		$currentOptions = $currentOptions + ";groupLayout=" + substring($labelAll, 19, size($labelAll));
+		
+		eval($resultCallback+" \""+$currentOptions+"\"");
+		$bResult = 1;
+	} 
+	else 
+	{
+		// Error
+		$bResult = 0;
+	}
+	return $bResult;
+}
