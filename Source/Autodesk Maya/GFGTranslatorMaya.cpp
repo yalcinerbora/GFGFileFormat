@@ -114,7 +114,7 @@ const char* GFGTranslator::defaultOptions = ""
 											"vuvLayout=0;"			// 0 Means Solo, 1 Means Group No
 
 											// Tangent Options
-											"vtData=7;"				// Write Tangents as FLOAT_4
+											"vtData=6;"				// Write Tangents as FLOAT_4
 											"vtLayout=0;"			// 0 Means Solo, 1 Means Group No
 
 											// Binormal Options
@@ -744,7 +744,6 @@ bool GFGTranslator::ImportMesh(MObject& meshTransform,
 		commandList.commandToExecute("toggleShadeMode");
 	}
 	commandList.commandToExecute("polyMergeVertex -d 0.0 -am 1 -ch 1 " + dagNode.name());
-
 
 	cout << "Mesh \"" << dagNode.name() << "\" loaded successfully.." << endl;
 	return true;

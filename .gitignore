@@ -29,6 +29,8 @@
 
 # Windows Intellisense Database
 *.sdf
+*.opensdf
+*.suo
 
 # Binaries
 Bin/

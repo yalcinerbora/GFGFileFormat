@@ -1,13 +1,13 @@
 global proc string GFGReDeploy (string $type)
  {
-	string $gfgOptsDest = "C:/Program Files/Autodesk/Maya2014/scripts/others/GFGOpts.mel";
-	string $gfgOptsSrc = "D:/GitHub/GFGFileFormat/Soruce/Autodesk Maya/GFGOpts.mel";
+	string $gfgOptsDest = "C:/Program Files/Autodesk/Maya2015/scripts/others/GFGOpts.mel";
+	string $gfgOptsSrc = "D:/GitHub/GFGFileFormat/Source/Autodesk Maya/GFGOpts.mel";
 	
-	string $gfgReDeployDest = "C:/Program Files/Autodesk/Maya2014/scripts/others/GFGReDeploy.mel";
-	string $gfgReDeploySrc = "D:/GitHub/GFGFileFormat/Soruce/Autodesk Maya/GFGReDeploy.mel";
+	string $gfgReDeployDest = "C:/Program Files/Autodesk/Maya2015/scripts/others/GFGReDeploy.mel";
+	string $gfgReDeploySrc = "D:/GitHub/GFGFileFormat/Source/Autodesk Maya/GFGReDeploy.mel";
 	
-	string $gfgErrWindowDest = "C:/Program Files/Autodesk/Maya2014/scripts/others/GFGErrorWindow.mel";
-	string $gfgErrWindowSrc = "D:/GitHub/GFGFileFormat/Soruce/Autodesk Maya/GFGErrorWindow.mel";
+	string $gfgErrWindowDest = "C:/Program Files/Autodesk/Maya2015/scripts/others/GFGErrorWindow.mel";
+	string $gfgErrWindowSrc = "D:/GitHub/GFGFileFormat/Source/Autodesk Maya/GFGErrorWindow.mel";
 
 	sysFile -copy $gfgOptsDest $gfgOptsSrc;
 	sysFile -copy $gfgErrWindowDest $gfgErrWindowSrc;
@@ -19,11 +19,11 @@ global proc string GFGReDeploy (string $type)
 	if($type == "debug")
 	{
 		//DEBUG
-		string $destMLL = "C:/Program Files/Autodesk/Maya2014/bin/plug-ins/GFGMaya.mll";
-		string $srcMLL = "D:/GitHub/GFGFileFormat/Bin64/Windows/Debug/GFGMaya.mll";
+		string $destMLL = "C:/Program Files/Autodesk/Maya2015/bin/plug-ins/GFGMaya.mll";
+		string $srcMLL = "D:/GitHub/GFGFileFormat/Bin/Windows/Debug/GFGMaya.mll";
 
-		string $destPDB = "C:/Program Files/Autodesk/Maya2014/bin/plug-ins/GFGMaya.pdb";
-		string $srcPDB = "D:/GitHub/GFGFileFormat/Bin64/Windows/Debug/GFGMaya.pdb";
+		string $destPDB = "C:/Program Files/Autodesk/Maya2015/bin/plug-ins/GFGMaya.pdb";
+		string $srcPDB = "D:/GitHub/GFGFileFormat/Bin/Windows/Debug/GFGMaya.pdb";
 		
 		unloadPlugin "GFGMaya.mll";
 		sysFile -copy $destMLL $srcMLL;
@@ -33,8 +33,8 @@ global proc string GFGReDeploy (string $type)
 	else if($type == "release")
 	{
 		//RELEASE
-		string $destMLL = "C:/Program Files/Autodesk/Maya2014/bin/plug-ins/GFGMaya.mll";
-		string $srcMLL = "D:/GitHub/GFGFileFormat/Bin64/Windows/Release/GFGMaya.mll";
+		string $destMLL = "C:/Program Files/Autodesk/Maya2015/bin/plug-ins/GFGMaya.mll";
+		string $srcMLL = "D:/GitHub/GFGFileFormat/Bin/Windows/Release/GFGMaya.mll";
 
 		unloadPlugin "GFGMaya.mll";
 		sysFile -copy $destMLL $srcMLL;
