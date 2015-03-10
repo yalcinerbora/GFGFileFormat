@@ -22,7 +22,6 @@ and the GPU Memory. It can literally take one memcopy to put your vertex data to
 - Packing Vertex Components
 - Variable Index Sizes (8, 16, 32 bits)
 - Binary Format
-- 
 
 ### GFG Cons
 
