@@ -137,7 +137,7 @@ const char* GFGTranslator::defaultOptions = ""
 																	// joints will be selected
 
 											//  Color Options
-											"vcData=55;"			//  Write Color as UNORM8_4
+											"vcData=54;"			//  Write Color as UNORM8_4
 											"vcLayout=0;"			// 0 Means Solo, 1 Means Group No
 
 											//***************************//
@@ -482,7 +482,8 @@ bool GFGTranslator::ImportMesh(MObject& meshTransform,
 										dataVertex.data() + meshPosPtr,
 										headerComp[componentId].dataType))
 		{
-			errorList += "Error: Failed to Create Mesh#" + meshIndex;
+			errorList += "Error: Failed to Create Mesh#";
+			errorList += meshIndex;
 			errorList += ". Position Data Type Mismatch.;";
 			return false;
 		}
@@ -527,7 +528,8 @@ bool GFGTranslator::ImportMesh(MObject& meshTransform,
 										dataVertex.data() + uvPosPtr,
 										headerComp[uvComponentIDs.back()].dataType))
 				{
-					errorList += "Error: Failed to Create Mesh#" + meshIndex; 
+					errorList += "Error: Failed to Create Mesh#";
+					errorList += meshIndex;
 					errorList += ". UV Data Type Mismatch.;";
 					return false;
 				}
@@ -571,7 +573,8 @@ bool GFGTranslator::ImportMesh(MObject& meshTransform,
 											dataVertex.data() + normalPosPtr,
 											headerComp[normalComponentID].dataType))
 				{
-					errorList += "Error: Failed to Create Mesh#" + meshIndex;
+					errorList += "Error: Failed to Create Mesh#";
+					errorList += meshIndex;
 					errorList += ". Normal Data Type Mismatch.;";
 					return false;
 				}
@@ -612,7 +615,8 @@ bool GFGTranslator::ImportMesh(MObject& meshTransform,
 											dataVertex.data() + colorPosPtr,
 											headerComp[colorComponentID].dataType))
 				{
-					errorList += "Error: Failed to Create Mesh#" + meshIndex; 
+					errorList += "Error: Failed to Create Mesh#";
+					errorList += meshIndex;
 					errorList += ". Color Data Type Mismatch.;";
 					return false;
 				}
@@ -1031,7 +1035,8 @@ MStatus GFGTranslator::Import(std::ifstream& fileReader, const MString fileName)
 	GFGFileError error = gfgLoader.ValidateAndOpen();
 	if(error != GFGFileError::OK)
 	{
-		errorList += "FatalError: Unable to Validate GFG File. Error Code : " + static_cast<int>(error);
+		errorList += "FatalError: Unable to Validate GFG File. Error Code : ";
+		errorList += static_cast<int>(error);
 		errorList += ".;";
 		return MStatus::kFailure;
 	}
@@ -1136,9 +1141,11 @@ MStatus GFGTranslator::Import(std::ifstream& fileReader, const MString fileName)
 					// Create
 					if(!ImportMesh(meshTransform, meshImportCommands, meshGeneratedName, node.meshReference))
 					{
-						// Some Stuff Went Wrong Break
-						errorList += "Error: Unable to Import Mesh#" + node.meshReference;
+						// Some Stuff Went Wrong
+						errorList += "Error: Unable to Import Mesh#";
+						errorList += node.meshReference;
 						errorList += ". Skipping...;";
+						dagTransforms.append(meshTransform);	// to prevent non-hier export to try again
 						continue;
 					}
 					// This Dag is on root Now
@@ -1198,9 +1205,10 @@ MStatus GFGTranslator::Import(std::ifstream& fileReader, const MString fileName)
 			// Create
 			if(!ImportMesh(meshTransform, meshImportCommands, meshGeneratedName, index))
 			{
-				// Some Stuff Went Wrong Break
-				errorList += "Unable to Import Mesh#" + index;
-				errorList += ".Skipping..;";
+				// Some Stuff Went Wrong
+				errorList += "Error: Unable to Import Mesh#";
+				errorList += index;
+				errorList += ".Skipping...;";
 				continue;
 			}
 			dagTransforms.append(meshTransform);
@@ -1461,6 +1469,9 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 												 mIt.currentItem(),
 												 boneWeights[i],
 												 jointCount[i]);
+
+				cout << "JointCount#" << i << ": " << jointCount[i] << endl;
+
 			}
 		}
 
@@ -1526,7 +1537,7 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 							// Export Position
 							double posData[4];
 							positions[mIt.vertexIndex(i)].get(posData);
-							WritePosition(vertexData, posData);
+							if(!WritePosition(vertexData, posData)) return MStatus::kFailure;
 							break;
 						}
 						case GFGMayaOptionsIndex::NORMAL:
@@ -1556,10 +1567,11 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 									break;
 
 								// Export Normal
-								WriteNormal(vertexData, 
-											normalDataD,
-											tangentDataD,
-											binormalDataD);
+								if(!WriteNormal(vertexData,
+												normalDataD,
+												tangentDataD,
+												binormalDataD)) 
+									return MStatus::kFailure;
 							}
 							
 							else if(type == GFGMayaOptionsIndex::TANGENT)
@@ -1568,10 +1580,11 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 									break;
 
 								// Export Tangent
-								WriteTangent(vertexData,
-											 normalDataD,
-											 tangentDataD,
-											 binormalDataD);
+								if(!WriteTangent(vertexData,
+												normalDataD,
+												tangentDataD,
+												binormalDataD)) 
+									return MStatus::kFailure;
 							}
 							else if(type == GFGMayaOptionsIndex::BINORMAL)
 							{
@@ -1579,10 +1592,11 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 									break;
 
 								// Export Binormal
-								WriteBinormal(vertexData,
+								if(!WriteBinormal(vertexData,
 											  normalDataD,
 											  tangentDataD,
-											  binormalDataD);
+											  binormalDataD)) 
+									return MStatus::kFailure;
 							}
 							break;
 						}						
@@ -1599,13 +1613,13 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 								mIt.getUVIndex(i, index, &uvSetNames[uvIndex]);
 								uvData[0] = static_cast<double>(us[uvIndex][std::max(index, 0)]);
 								uvData[1] = static_cast<double>(vs[uvIndex][std::max(index, 0)]);
-								WriteUV(vertexData, uvData);
+								if(!WriteUV(vertexData, uvData)) return MStatus::kFailure;
 							}
 							break;
 						}
 						case GFGMayaOptionsIndex::WEIGHT:
 						{
-							if(!gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)])
+							if(!hasWeights || !gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)])
 								break;
 
 							// TODO Export Weight
@@ -1613,7 +1627,7 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 						}
 						case GFGMayaOptionsIndex::WEIGHT_INDEX:
 						{
-							if(!gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)])
+							if(!hasWeights || !gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)])
 								break;
 
 							// TODO Export WIndex
@@ -1626,7 +1640,7 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 
 							int index;
 							mIt.getColorIndex(i, index);
-							WriteColor(vertexData, colors[std::max(index, 0)]);
+							if(!WriteColor(vertexData, colors[std::max(index, 0)])) return MStatus::kFailure;
 							break;
 						}
 					}
@@ -1947,7 +1961,7 @@ MStatus GFGTranslator::ExportSkeleton(const MDagPath&)
 	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WritePosition(std::vector<std::vector<uint8_t>>& meshData, const double position[3]) const
+MStatus GFGTranslator::WritePosition(std::vector<std::vector<uint8_t>>& meshData, const double position[3]) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& positionGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::POSITION)]);
@@ -1963,13 +1977,15 @@ void GFGTranslator::WritePosition(std::vector<std::vector<uint8_t>>& meshData, c
 								 gfgOptions.dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::POSITION)]))
 	{ 
 		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WriteNormal(std::vector<std::vector<uint8_t>>& meshData, 
-								const double normal[3], 
-								const double tangent[3], 
-								const double binormal[3]) const
+MStatus GFGTranslator::WriteNormal(std::vector<std::vector<uint8_t>>& meshData,
+								   const double normal[3],
+								   const double tangent[3],
+								   const double binormal[3]) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& normalGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::NORMAL)]);
@@ -1986,11 +2002,13 @@ void GFGTranslator::WriteNormal(std::vector<std::vector<uint8_t>>& meshData,
 		tangent,
 		binormal))
 	{
-		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		cout << "Fatal Error! Cannot Write normal with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WriteUV(std::vector<std::vector<uint8_t>>& meshData, const double uv[2]) const
+MStatus GFGTranslator::WriteUV(std::vector<std::vector<uint8_t>>& meshData, const double uv[2]) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& uvGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::UV)]);
@@ -2005,11 +2023,13 @@ void GFGTranslator::WriteUV(std::vector<std::vector<uint8_t>>& meshData, const d
 		uv,
 		gfgOptions.dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::UV)]))
 	{
-		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		cout << "Fatal Error! Cannot Write uv with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WriteTangent(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const
+MStatus GFGTranslator::WriteTangent(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& tangentGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::TANGENT)]);
@@ -2026,11 +2046,13 @@ void GFGTranslator::WriteTangent(std::vector<std::vector<uint8_t>>& meshData, co
 		normal,
 		binormal))
 	{
-		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		cout << "Fatal Error! Cannot Write tangent with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WriteBinormal(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const
+MStatus GFGTranslator::WriteBinormal(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& binormalGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::BINORMAL)]);
@@ -2047,11 +2069,13 @@ void GFGTranslator::WriteBinormal(std::vector<std::vector<uint8_t>>& meshData, c
 		tangent,
 		normal))
 	{
-		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		cout << "Fatal Error! Cannot Write binormal with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WriteWeight(std::vector<std::vector<uint8_t>>& meshData, int vLocalIndex, const double* weights, const unsigned int* wIndex) const
+MStatus GFGTranslator::WriteWeight(std::vector<std::vector<uint8_t>>& meshData, int vLocalIndex, const double* weights, const unsigned int* wIndex) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& weightGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)]);
@@ -2068,11 +2092,13 @@ void GFGTranslator::WriteWeight(std::vector<std::vector<uint8_t>>& meshData, int
 		gfgOptions.influence,
 		gfgOptions.dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)]))
 	{
-		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		cout << "Fatal Error! Cannot Write weight with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WriteWeightIndex(std::vector<std::vector<uint8_t>>& meshData, int vLocalIndex, const double* weights, const unsigned int* wIndex) const
+MStatus GFGTranslator::WriteWeightIndex(std::vector<std::vector<uint8_t>>& meshData, int vLocalIndex, const double* weights, const unsigned int* wIndex) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& weightIGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)]);
@@ -2089,11 +2115,13 @@ void GFGTranslator::WriteWeightIndex(std::vector<std::vector<uint8_t>>& meshData
 		gfgOptions.influence,
 		gfgOptions.dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)]))
 	{
-		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		cout << "Fatal Error! Cannot Write weight index with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WriteColor(std::vector<std::vector<uint8_t>>& meshData, const MColor& color) const
+MStatus GFGTranslator::WriteColor(std::vector<std::vector<uint8_t>>& meshData, const MColor& color) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& colorGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::COLOR)]);
@@ -2113,8 +2141,10 @@ void GFGTranslator::WriteColor(std::vector<std::vector<uint8_t>>& meshData, cons
 		colorArray,
 		gfgOptions.dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::COLOR)]))
 	{
-		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		cout << "Fatal Error! Cannot Write color with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
 void GFGTranslator::PrintOptStruct() const 

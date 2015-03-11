@@ -73,14 +73,14 @@ class GFGTranslator : public MPxFileTranslator
 		MStatus					ExportAnimationOnSkeleton(const MDagPath& skeletonRootBone);
 
 		// Export Mesh Data Writes
-		void					WritePosition(std::vector<std::vector<uint8_t>>& meshData, const double position[3]) const;
-		void					WriteNormal(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const;
-		void					WriteUV(std::vector<std::vector<uint8_t>>& meshData, const double uv[2]) const;
-		void					WriteTangent(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const;
-		void					WriteBinormal(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const;
-		void					WriteWeight(std::vector<std::vector<uint8_t>>& meshData, int vLocalIndex, const double* weights, const unsigned int* wIndex) const;
-		void					WriteWeightIndex(std::vector<std::vector<uint8_t>>& meshData, int vLocalIndex, const double* weights, const unsigned int* wIndex) const;
-		void					WriteColor(std::vector<std::vector<uint8_t>>& meshData, const MColor& color) const;
+		MStatus					WritePosition(std::vector<std::vector<uint8_t>>& meshData, const double position[3]) const;
+		MStatus					WriteNormal(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const;
+		MStatus					WriteUV(std::vector<std::vector<uint8_t>>& meshData, const double uv[2]) const;
+		MStatus					WriteTangent(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const;
+		MStatus					WriteBinormal(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const;
+		MStatus					WriteWeight(std::vector<std::vector<uint8_t>>& meshData, int vLocalIndex, const double* weights, const unsigned int* wIndex) const;
+		MStatus					WriteWeightIndex(std::vector<std::vector<uint8_t>>& meshData, int vLocalIndex, const double* weights, const unsigned int* wIndex) const;
+		MStatus					WriteColor(std::vector<std::vector<uint8_t>>& meshData, const MColor& color) const;
 
 		// Debugging
 		void					PrintOptStruct() const;
