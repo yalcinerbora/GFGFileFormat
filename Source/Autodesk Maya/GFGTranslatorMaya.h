@@ -63,6 +63,7 @@ class GFGTranslator : public MPxFileTranslator
 		bool					IsRequiredTransform(const MDagPath&) const;
 		MStatus					NormalizeSelectionList(MSelectionList&) const;
 		GFGMayaOptionsIndex		ElementIndexToComponent(unsigned int) const;	// Traverse Components in order
+		void					FindLambert1();
 
 		// Exporting Func
 		MStatus					ExportMesh(const GFGTransform& transform, const MDagPath&, uint32_t parentIndex);
@@ -99,6 +100,7 @@ class GFGTranslator : public MPxFileTranslator
 		GFGMayaOptions			gfgOptions;
 		std::vector<MString>	mayaMaterialNames;	// For avoiding material duplication
 		std::vector<MDagPath>	hierarcyNames;		// Lookup for parenting		
+		MObject					lambert1;			// Lambert1 Material used in non materialed mesh
 
 		// Import Related
 		GFGFileLoader			gfgLoader;

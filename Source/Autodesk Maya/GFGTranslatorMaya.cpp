@@ -215,7 +215,7 @@ void GFGTranslator::FindOrCreateMaterial(MDagModifier& commList,
 										 uint32_t matIndex)
 {
 	MStatus status;
-	// Start Iterating from shading engines (direct iteration from surface shader does not give result
+	// Start Iterating from shading engines (direct iteration from surface shader does not give result)
 	// Find the shader with the name
 	MItDependencyNodes dgIterator(MFn::kShadingEngine, &status);
 	for(; !dgIterator.isDone(); dgIterator.next())
@@ -262,6 +262,32 @@ void GFGTranslator::FindOrCreateMaterial(MDagModifier& commList,
 						materialUniformData);
 	cout << "Material with name \"" << shaderName << "\" created successfully" << endl;
 	referencedMaterials.append(shaderName);
+}
+
+void GFGTranslator::FindLambert1()
+{
+	MStatus status;
+	// Start Iterating from shading engines (direct iteration from surface shader does not give result)
+	MItDependencyNodes dgIterator(MFn::kShadingEngine, &status);
+	for(; !dgIterator.isDone(); dgIterator.next())
+	{
+		// Surface Shader Dependency Node Find Bloat
+		MPlugArray materialReferences;
+		MFnDependencyNode shadingEngine(dgIterator.item(), &status);
+		MPlug shaderReference = shadingEngine.findPlug("surfaceShader", &status);
+		shaderReference.connectedTo(materialReferences, true, false, &status);
+		if(materialReferences.length() == 0)
+			continue;
+		MObject surfaceShaderNodeObj = materialReferences[0].node();
+	
+		// lamber1 shader also has its name fixed check name
+		MFnDependencyNode shaderNode(surfaceShaderNodeObj);
+		if(shaderNode.name() == "lambert1")
+		{
+			lambert1 = surfaceShaderNodeObj;
+			return;
+		}
+	}
 }
 
 MObject GFGTranslator::FindDAG(MString& name)
@@ -1304,6 +1330,7 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 	// Get SkinClusters and Materials which are referenced by this object
 	// and UVSet names since some api queries with that
 	GetReferencedMaterials(materials, polyMatIndices, instanceNo, mesh);
+	if(materials.length() == 0) materials.insert(lambert1, 0);
 	if(!GetSkData(skClusters, directShapePath)){ return MS::kFailure; }
 	mesh.getUVSetNames(uvSetNames);
 	hasUvs = (mesh.numUVSets() > 0) ? true : false;
@@ -1451,6 +1478,18 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 	//	cout << tangents[z].x << " " << tangents[z].y << " " << tangents[z].z << endl;
 	//}
 
+	MDagPathArray infObjs;
+	MFnSkinCluster skin(skClusters[0]);
+	skin.influenceObjects(infObjs);
+	for(unsigned int j = 0; j < infObjs.length(); j++)
+	{
+		cout << infObjs[j].fullPathName() << endl;
+	}
+	cout << endl;
+	cout << "JointCount#" << 0 << ": " << jointCount[0] << endl;
+	cout << "WeightArraySize#" << 0 << ": " << boneWeights[0].length() << endl;
+	cout << endl;
+
 	// Start Iterating Each Face
 	cout << "Starting to Iterate Faces..." << endl;
 	for(MItMeshPolygon mIt(p.node());
@@ -1464,14 +1503,10 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 			{
 				boneWeights[i].clear();
 				MFnSkinCluster skin(skClusters[i]);
-
 				MStatus status = skin.getWeights(directShapePath,
 												 mIt.currentItem(),
 												 boneWeights[i],
 												 jointCount[i]);
-
-				cout << "JointCount#" << i << ": " << jointCount[i] << endl;
-
 			}
 		}
 
@@ -1568,12 +1603,12 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 
 								// Export Normal
 								if(!WriteNormal(vertexData,
-												normalDataD,
-												tangentDataD,
-												binormalDataD)) 
+									normalDataD,
+									tangentDataD,
+									binormalDataD))
 									return MStatus::kFailure;
 							}
-							
+
 							else if(type == GFGMayaOptionsIndex::TANGENT)
 							{
 								if(!gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::TANGENT)])
@@ -1581,9 +1616,9 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 
 								// Export Tangent
 								if(!WriteTangent(vertexData,
-												normalDataD,
-												tangentDataD,
-												binormalDataD)) 
+									normalDataD,
+									tangentDataD,
+									binormalDataD))
 									return MStatus::kFailure;
 							}
 							else if(type == GFGMayaOptionsIndex::BINORMAL)
@@ -1593,20 +1628,20 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 
 								// Export Binormal
 								if(!WriteBinormal(vertexData,
-											  normalDataD,
-											  tangentDataD,
-											  binormalDataD)) 
+									normalDataD,
+									tangentDataD,
+									binormalDataD))
 									return MStatus::kFailure;
 							}
 							break;
-						}						
+						}
 						case GFGMayaOptionsIndex::UV:
 						{
 							// Export UV
 							if(!hasUvs || !gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::UV)])
 								break;
 
-							double uvData[2];							
+							double uvData[2];
 							for(int uvIndex = 0; uvIndex < mesh.numUVSets(); uvIndex++)
 							{
 								int index;
@@ -1621,6 +1656,7 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 						{
 							if(!hasWeights || !gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)])
 								break;
+
 
 							// TODO Export Weight
 							break;
@@ -1644,11 +1680,18 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 							break;
 						}
 					}
-				}	
+				}
 			}
+
 			// We already have this vertex
 			// Add it to the array of that material
-			std::vector<uint8_t>& currMatIndexArray = materialIndexData[polyMatIndices[mIt.index()]];
+			int materialIndex = polyMatIndices[mIt.index()];
+			if(materialIndex == -1)
+			{
+				// Fallback to whatever material is on index 0
+				materialIndex = 0;
+			}
+			std::vector<uint8_t>& currMatIndexArray = materialIndexData[materialIndex];
 
 			// Allocate Bytes
 			currMatIndexArray.insert(currMatIndexArray.end(), currentMeshHeader.indexSize, 0);
@@ -1895,9 +1938,19 @@ MStatus GFGTranslator::GetReferencedMaterials(MObjectArray& materials, MIntArray
 		MFnDependencyNode shadingEngine(shadingEngines[i]);
 		shaderReference = shadingEngine.findPlug("surfaceShader");
 		shaderReference.connectedTo(materialReferences, true, false);
-		actualMaterial = materialReferences[0].node();
 
-		materials.append(actualMaterial);
+		if(materialReferences.length() != 0)
+		{
+			actualMaterial = materialReferences[0].node();
+			materials.append(actualMaterial);
+		}
+		else
+		{
+			// Material Probably Deleted however depGraph holds the Shading engine node
+			// A.k.a user deleted shader from hypershade and some(all) polygons are green
+			// Here Fallback to lambert since you cant delete lambert
+			materials.append(lambert1);
+		}
 	}
 	return MS::kSuccess;
 }
@@ -1949,14 +2002,28 @@ MStatus GFGTranslator::WriteReferencedMaterials(std::vector<uint32_t>& materialI
 	return MS::kSuccess;
 }
 
-MStatus GFGTranslator::ExportSkeleton(const MDagPath&)
+MStatus GFGTranslator::ExportSkeleton(const MDagPath& root)
 {
-	// This dag path is guaranteed to be the skeleton's root
 
+	//// Root Check
+	//MDagPath rootCpy(root);
+	//MFnDagNode dagNode(root.node());
+	//
+	//while(rootCpy.pop() == MStatus::kSuccess)
+	//{
+	//	rootCpy.hasFn(MFn)
+	//}
 
-	// Errors
+	//
+	//MItDag iterator(MItDag::kDepthFirst);
+	//iterator.reset(root, MItDag::kDepthFirst, MFn::kJoint);
 
-	// Error on mid way objects(transforms) between joints
+	//for(; iterator.isDone();
+	//	iterator.next())
+	//{
+	//	cout << iterator.fullPathName() << endl;
+	//}
+	//cout << endl;
 
 	return MStatus::kSuccess;
 }
@@ -2473,6 +2540,9 @@ MStatus GFGTranslator::writer(const MFileObject& file,
 	cout << "http://yalcinerbora.github.io/GFG/" << endl;
 
 	ResetForExport();
+	FindLambert1();		// Find lambert1 every export 
+						// just in case maya resets lambert1 reference 
+						// when user clears the scene
 
 	// GFG File Writing
 	std::ofstream fileExport;
