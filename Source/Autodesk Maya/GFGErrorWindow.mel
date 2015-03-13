@@ -11,17 +11,14 @@ global proc string GFGErrorWindow (string $errors)
 	// Warning		: Something is probably the way user dont want. Export is still successfully
 	// Info			: Telling some information that may be usefull to tell the user
 	// Fatal Error	: All export/Import process is terminated and file/nodes created by the exporter is deleted
-	
-	// OK Button Closes the window (and destroys it)
 			
 	string $errWindow = `window -title "GFG Error and Warnings" 
 							-iconName "GFG Err"
 							-s true -tb true//`; 
 							-w 700`;
 
-	columnLayout -adjustableColumn true -columnAttach "both" 0 -columnWidth 480;
-		textScrollList scrollList;
-		button -w 200 -label "Close" -command ("deleteUI -window " + $errWindow);
+	rowLayout -numberOfColumns 1 -adjustableColumn 1 -rowAttach 1 "both" 0;
+	textScrollList scrollList;
 		
 	// Append Errors To The Text List
 	string $errorList[];
