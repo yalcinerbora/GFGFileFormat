@@ -135,7 +135,7 @@ MStatus GFGMayaOptions::PopulateOptions(const MString& options)
 			ParseOptionGFGData(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)], currentOption, "vwiData");
 			ParseOptionInt(layout[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)], currentOption, "vwiLayout");
 
-			ParseOptionGFGMayaTraversal(boneTraverse, currentOption, "boneIndex");
+			ParseOptionGFGMayaTraversal(boneTraverse, currentOption, "boneTraversal");
 			ParseOptionInt(influence, currentOption, "influence");
 
 			// Color Options
