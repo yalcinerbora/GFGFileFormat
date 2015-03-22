@@ -9,6 +9,8 @@
 #include <maya/MPlug.h>
 #include <maya/MDagModifier.h>
 #include <maya/MGlobal.h>
+#include <maya/MFnIkJoint.h>
+#include <maya/MQuaternion.h>
 
 #include "GFG/GFGMaterialTypes.h"
 
@@ -177,7 +179,7 @@ static bool CreateAndConnectTexture(MDagModifier& commandList,
 		MString filePath;
 		filePath.setUTF8(reinterpret_cast<const char*>(textureData.data() + texturePath.stringLocation));
 
-		cout << "Tring to Write String : " << filePath << endl;
+		//cout << "Trying to Write String : " << filePath << endl;
 
 		MString result;
 		MGlobal::executeCommand(texConenctCommand + matFullPlugName + "; \"", result);
@@ -206,10 +208,10 @@ static bool FetchAndLoadUniform(MDagModifier& commandList,
 					uniformData.data() + uniform.dataLocation,
 					GFGDataTypeByteSize[static_cast<uint32_t>(uniform.dataType)]);
 
-		cout << "Tring to Write Float3 : " << 
-			data[0] << "  " <<
-			data[1] << "  " <<
-			data[2] << endl;
+		//cout << "Trying to Write Float3 : " << 
+		//	data[0] << "  " <<
+		//	data[1] << "  " <<
+		//	data[2] << endl;
 
 		commandString += "-type " + dataType + " ";
 		commandString += data[0];
@@ -225,7 +227,7 @@ static bool FetchAndLoadUniform(MDagModifier& commandList,
 					uniformData.data() + uniform.dataLocation,
 					GFGDataTypeByteSize[static_cast<uint32_t>(uniform.dataType)]);
 
-		cout << "Tring to Write Float : " << data << endl;
+		//cout << "Trying to Write Float : " << data << endl;
 
 		commandString += data;
 	}
@@ -237,7 +239,7 @@ static bool FetchAndLoadUniform(MDagModifier& commandList,
 					GFGDataTypeByteSize[static_cast<uint32_t>(uniform.dataType)]);
 
 
-		cout << "Tring to Write Bool : " << data << endl;
+		//cout << "Trying to Write Bool : " << data << endl;
 		commandString += data;
 	}
 	else
@@ -511,8 +513,10 @@ void GFGToMaya::Material(MDagModifier& commandList,
 }
 
 // MAYA -----> GFG
-void MayaToGFG::Transform(GFGTransform& gfgTransform, const MFnTransform& mayaTransform)
+void MayaToGFG::Transform(GFGTransform& gfgTransform, const MObject& mayaTransformNode)
 {
+	MFnTransform mayaTransform(mayaTransformNode);
+
 	// Fishy Part here
 	// Maya has convinient transform definition for pivot changing etc.
 	// We need to bake it to GFG format since gfg does not have pivot information
@@ -545,6 +549,27 @@ void MayaToGFG::Transform(GFGTransform& gfgTransform, const MFnTransform& mayaTr
 	   shear[2] != 0.0)
 	{
 		//errorList += "Warning: Skipping Shear portion of transformation.;";
+	}
+
+	// Parent Maybe a joint
+	// Joints has rotate orient that users frequently change
+	// We need to take that into consideration aswell
+	double jointOrientX = 0.0;
+	double jointOrientY = 0.0;
+	double jointOrientZ = 0.0;
+	MStatus status;
+	MFnIkJoint jointTransform(mayaTransformNode, &status);
+	if(status == MStatus::kSuccess)
+	{
+		// Add Joint Orient Rotation as Rotation
+
+		MEulerRotation joRT;
+		jointTransform.getOrientation(joRT);
+		if(joRT.order != MEulerRotation::kXYZ)
+		{
+			joRT.reorderIt(MEulerRotation::kXYZ);
+		}
+		rt = (rt.asMatrix() * joRT.asMatrix());
 	}
 
 	gfgTransform.translate[0] = static_cast<float>(transMat(3, 0));

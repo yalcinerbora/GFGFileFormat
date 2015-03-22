@@ -143,11 +143,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\Autodesk Maya\GFGMayaConversions.cpp" />
+    <ClCompile Include="..\..\..\Source\Autodesk Maya\GFGMayaGraphIterator.cpp" />
     <ClCompile Include="..\..\..\Source\Autodesk Maya\GFGMayaOptions.cpp" />
     <ClCompile Include="..\..\..\Source\Autodesk Maya\GFGTranslatorMaya.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Autodesk Maya\GFGMayaConversions.h" />
+    <ClInclude Include="..\..\..\Source\Autodesk Maya\GFGMayaGraphIterator.h" />
     <ClInclude Include="..\..\..\Source\Autodesk Maya\GFGMayaOptions.h" />
     <ClInclude Include="..\..\..\Source\Autodesk Maya\GFGMayaStructures.h" />
     <ClInclude Include="..\..\..\Source\Autodesk Maya\GFGTranslatorMaya.h" />

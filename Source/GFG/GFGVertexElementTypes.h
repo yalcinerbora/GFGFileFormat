@@ -91,18 +91,26 @@ namespace GFGWeight
 {
 	bool		IsCompatible(GFGDataType, unsigned int maxWeightInfluence);
 	bool		ConvertData(uint8_t data[], size_t dataSize,
-							const double weight[], const unsigned int wIndex[],
-							unsigned int maxWeightInfluence,
+							const double weight[], unsigned int maxWeightInfluence,
 							GFGDataType type);
+	bool		UnConvertData(double weight[],
+							  unsigned int &maxWeightInfluence,
+							  size_t dataSize,
+							  const uint8_t data[],
+							  GFGDataType type);
 };
 
 namespace GFGWeightIndex
 {
 	bool		IsCompatible(GFGDataType, unsigned int maxWeightInfluence);
 	bool		ConvertData(uint8_t data[], size_t dataSize,
-							const double weight[], const unsigned int wIndex[],
-							unsigned int maxWeightInfluence,
+							const unsigned int wIndex[], unsigned int maxWeightInfluence,
 							GFGDataType type);
+	bool		UnConvertData(unsigned int wIndex[],
+							  unsigned int &maxWeightInfluence,
+							  size_t dataSize,
+							  const uint8_t data[],
+							  GFGDataType type);
 };
 
 namespace GFGColor

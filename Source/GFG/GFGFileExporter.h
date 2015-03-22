@@ -45,7 +45,6 @@ class GFGFileWriterSTL : public GFGFileWriterI
 		void	Write(const uint8_t buffer[], size_t readAmount) override;
 };
 
-
 struct GFGAddMeshResult
 {
 	uint32_t meshIndex;
