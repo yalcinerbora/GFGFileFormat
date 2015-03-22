@@ -29,7 +29,7 @@ void GFGHeader::CalculateDataOffsets()
 	// Scene Hier Size
 	headerSize += sizeof(uint32_t);
 	headerSize += sceneHierarchy.nodes.size() * sizeof(GFGNode);
-	
+
 	// Mesh Mat Pair
 	headerSize += sizeof(uint32_t);
 	headerSize += meshMaterialConnections.pairs.size() * sizeof(GFGMeshMatPair);
@@ -91,7 +91,12 @@ void GFGHeader::CalculateDataOffsets()
 
 	meshMaterialConnections.meshMatCount = static_cast<uint32_t>(meshMaterialConnections.pairs.size());
 	meshSkeletonConnections.meshSkelCount = static_cast<uint32_t>(meshSkeletonConnections.connections.size());
-	
+
+	for(GFGSkeletonHeader& skel : skeletons)
+	{
+		skel.boneAmount = static_cast<uint32_t>(skel.bones.size());
+	}
+
 	// Calculate Offsets
 	uint64_t dataOffsetPtr = 0;// headerSize;
 

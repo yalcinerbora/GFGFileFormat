@@ -134,14 +134,15 @@ uint32_t GFGFileExporter::AddSkeleton(const std::vector<uint32_t>& parentHierarc
 	assert(transforms.size() == parentHierarcy.size());
 	auto end = gfgHeader.bonetransformData.transforms.end();
 	auto insertLoc = gfgHeader.bonetransformData.transforms.insert(end, transforms.begin(), transforms.end());
-	auto distance = std::distance(gfgHeader.bonetransformData.transforms.end(), insertLoc);
+	auto distance = std::distance(gfgHeader.bonetransformData.transforms.begin(), insertLoc);
 
 	gfgHeader.skeletons.emplace_back(GFGSkeletonHeader {0, std::vector<GFGBone>()});
 	for(uint32_t parent : parentHierarcy)
 	{
-		(gfgHeader.skeletons.end()--)->bones.emplace_back(GFGBone {parent, static_cast< uint32_t >(distance)});
+		gfgHeader.skeletons.back().bones.emplace_back(GFGBone {parent, static_cast<uint32_t>(distance)});
 		distance++;
 	}
+	gfgHeader.skeletons.back().boneAmount = static_cast<uint32_t>(gfgHeader.skeletons.back().bones.size());
 	return static_cast<uint32_t>(gfgHeader.skeletons.size() - 1);
 }
 

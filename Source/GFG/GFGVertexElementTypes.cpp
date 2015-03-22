@@ -553,7 +553,7 @@ bool GFGWeight::IsCompatible(GFGDataType t, unsigned int maxWeightInfluence)
 }
 
 bool GFGWeight::ConvertData(uint8_t data[], size_t dataSize,
-							const double weight[], const unsigned int wIndex[], 
+							const double weight[],
 							unsigned int maxWeightInfluence,
 							GFGDataType type)
 {
@@ -562,10 +562,7 @@ bool GFGWeight::ConvertData(uint8_t data[], size_t dataSize,
 		case GFGDataType::HALF_1:
 		{
 			assert(maxWeightInfluence <= 1);
-			assert(dataSize >= sizeof(uint16_t) * maxWeightInfluence);
-			uint16_t temp;
-			temp = GFGConversions::DoubleToHalf(weight[0]);
-			std::memcpy(data, &temp, sizeof(uint16_t));
+			GFGConversions::DoubleToHalfV(data, dataSize, weight, maxWeightInfluence);
 			break;
 		}
 		case GFGDataType::HALF_2:
@@ -589,10 +586,7 @@ bool GFGWeight::ConvertData(uint8_t data[], size_t dataSize,
 		case GFGDataType::FLOAT_1:
 		{
 			assert(maxWeightInfluence <= 1);
-			assert(dataSize >= sizeof(float) * maxWeightInfluence);
-			float temp;
-			temp = static_cast<float>(weight[0]);
-			std::memcpy(data, &temp, sizeof(float));
+			GFGConversions::DoubleToFloatV(data, dataSize, weight, maxWeightInfluence);
 			break;
 		}
 		case GFGDataType::FLOAT_2:
@@ -617,28 +611,28 @@ bool GFGWeight::ConvertData(uint8_t data[], size_t dataSize,
 		{
 			assert(maxWeightInfluence <= 1);
 			assert(dataSize >= sizeof(double) * maxWeightInfluence);
-			std::memcpy(data, &weight, sizeof(double) * maxWeightInfluence);
+			std::memcpy(data, weight, sizeof(double) * maxWeightInfluence);
 			break;
 		}
 		case GFGDataType::DOUBLE_2:
 		{
 			assert(maxWeightInfluence <= 2);
 			assert(dataSize >= sizeof(double) * maxWeightInfluence);
-			std::memcpy(data, &weight, sizeof(double) * maxWeightInfluence);
+			std::memcpy(data, weight, sizeof(double) * maxWeightInfluence);
 			break;
 		}
 		case GFGDataType::DOUBLE_3:
 		{
 			assert(maxWeightInfluence <= 3);
 			assert(dataSize >= sizeof(double) * maxWeightInfluence);
-			std::memcpy(data, &weight, sizeof(double) * maxWeightInfluence);
+			std::memcpy(data, weight, sizeof(double) * maxWeightInfluence);
 			break;
 		}
 		case GFGDataType::DOUBLE_4:
 		{
 			assert(maxWeightInfluence <= 4);
 			assert(dataSize >= sizeof(double) * maxWeightInfluence);
-			std::memcpy(data, &weight, sizeof(double) * maxWeightInfluence);
+			std::memcpy(data, weight, sizeof(double) * maxWeightInfluence);
 			break;
 		}
 		case GFGDataType::QUADRUPLE_1:
@@ -720,14 +714,193 @@ bool GFGWeight::ConvertData(uint8_t data[], size_t dataSize,
 		}
 		case GFGDataType::UNORM16_2_4:
 		{
-			assert(maxWeightInfluence <= 4);
+			assert(maxWeightInfluence <= 8);
 			GFGConversions::DoubleToUnorm16_2_4(data, dataSize, weight, maxWeightInfluence);
 			break;
 		}
 		case GFGDataType::UNORM8_4_4:
 		{
-			assert(maxWeightInfluence <= 4);
+			assert(maxWeightInfluence <= 16);
 			GFGConversions::DoubleToUnorm8_4_4(data, dataSize, weight, maxWeightInfluence);
+			break;
+		}
+		default:
+			return false;
+	}
+	return true;
+}
+
+bool GFGWeight::UnConvertData(double weight[],
+							  unsigned int &maxWeightInfluence,
+							  size_t dataSize,
+							  const uint8_t data[],
+							  GFGDataType type)
+{
+	switch(type)
+	{
+		case GFGDataType::HALF_1:
+		{
+			maxWeightInfluence = 1;
+			GFGConversions::HalfToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::HALF_2:
+		{
+			maxWeightInfluence = 2;
+			GFGConversions::HalfToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::HALF_3:
+		{
+			maxWeightInfluence = 3;
+			GFGConversions::HalfToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::HALF_4:
+		{
+			maxWeightInfluence = 4;
+			GFGConversions::HalfToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::FLOAT_1:
+		{
+			maxWeightInfluence = 1;
+			GFGConversions::FloatToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::FLOAT_2:
+		{
+			maxWeightInfluence = 2;
+			GFGConversions::FloatToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::FLOAT_3:
+		{
+			maxWeightInfluence = 3;
+			GFGConversions::FloatToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::FLOAT_4:
+		{
+			maxWeightInfluence = 4;
+			GFGConversions::FloatToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::DOUBLE_1:
+		{
+			maxWeightInfluence = 1;
+			assert(dataSize >= sizeof(double) * maxWeightInfluence);
+			std::memcpy(weight, data, sizeof(double) * maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::DOUBLE_2:
+		{
+			maxWeightInfluence = 2;
+			assert(dataSize >= sizeof(double) * maxWeightInfluence);
+			std::memcpy(weight, data, sizeof(double) * maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::DOUBLE_3:
+		{
+			maxWeightInfluence = 3;
+			assert(dataSize >= sizeof(double) * maxWeightInfluence);
+			std::memcpy(weight, data, sizeof(double) * maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::DOUBLE_4:
+		{
+			maxWeightInfluence = 4;
+			assert(dataSize >= sizeof(double) * maxWeightInfluence);
+			std::memcpy(weight, data, sizeof(double) * maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::QUADRUPLE_1:
+		case GFGDataType::QUADRUPLE_2:
+		case GFGDataType::QUADRUPLE_3:
+		case GFGDataType::QUADRUPLE_4:
+			return false;
+		case GFGDataType::UNORM8_1:
+		{
+			maxWeightInfluence = 1;
+			GFGConversions::UNorm8ToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UNORM8_2:
+		{
+			maxWeightInfluence = 2;
+			GFGConversions::UNorm8ToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UNORM8_3:
+		{
+			maxWeightInfluence = 3;
+			GFGConversions::UNorm8ToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UNORM8_4:
+		{
+			maxWeightInfluence = 4;
+			GFGConversions::UNorm8ToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UNORM16_1:
+		{
+			maxWeightInfluence = 1;
+			GFGConversions::UNorm16ToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UNORM16_2:
+		{
+			maxWeightInfluence = 2;
+			GFGConversions::UNorm16ToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UNORM16_3:
+		{
+			maxWeightInfluence = 3;
+			GFGConversions::UNorm16ToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UNORM16_4:
+		{
+			maxWeightInfluence = 4;
+			GFGConversions::UNorm16ToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UNORM32_1:
+		{
+			maxWeightInfluence = 1;
+			GFGConversions::UNorm32ToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UNORM32_2:
+		{
+			maxWeightInfluence = 2;
+			GFGConversions::UNorm32ToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UNORM32_3:
+		{
+			maxWeightInfluence = 3;
+			GFGConversions::UNorm32ToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UNORM32_4:
+		{
+			maxWeightInfluence = 4;
+			GFGConversions::UNorm32ToDoubleV(weight, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UNORM16_2_4:
+		{
+			maxWeightInfluence = 8;
+			GFGConversions::Unorm16_2_4ToDoubles(weight, maxWeightInfluence, dataSize, data);
+			break;
+		}
+		case GFGDataType::UNORM8_4_4:
+		{
+			maxWeightInfluence = 16;
+			GFGConversions::Unorm8_4_4ToDoubles(weight, maxWeightInfluence, dataSize, data);
 			break;
 		}
 		default:
@@ -776,7 +949,7 @@ bool GFGWeightIndex::IsCompatible(GFGDataType t, unsigned int maxWeightInfluence
 }
 
 bool GFGWeightIndex::ConvertData(uint8_t data[], size_t dataSize,
-								 const double weight[], const unsigned int wIndex[],
+								 const unsigned int wIndex[],
 								 unsigned int maxWeightInfluence,
 								 GFGDataType type)
 {
@@ -872,6 +1045,112 @@ bool GFGWeightIndex::ConvertData(uint8_t data[], size_t dataSize,
 		{
 			assert(maxWeightInfluence <= 16);
 			GFGConversions::UIntToUInt8_4_4(data, dataSize, wIndex, maxWeightInfluence);
+			break;
+		}
+		default:
+			return false;
+	}
+	return true;
+}
+
+bool GFGWeightIndex::UnConvertData(unsigned int wIndex[],
+								   unsigned int &maxWeightInfluence,
+								   size_t dataSize,
+								   const uint8_t data[],
+								   GFGDataType type)
+{
+	switch(type)
+	{
+		case GFGDataType::UINT8_1:
+		{
+			maxWeightInfluence = 1;
+			GFGConversions::UInt8ToUIntV(wIndex, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UINT8_2:
+		{
+			maxWeightInfluence = 2;
+			GFGConversions::UInt8ToUIntV(wIndex, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UINT8_3:
+		{
+			maxWeightInfluence = 3;
+			GFGConversions::UInt8ToUIntV(wIndex, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UINT8_4:
+		{
+			maxWeightInfluence = 4;
+			GFGConversions::UInt8ToUIntV(wIndex, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UINT16_1:
+		{
+			maxWeightInfluence = 1;
+			GFGConversions::UInt16ToUIntV(wIndex, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UINT16_2:
+		{
+			maxWeightInfluence = 2;
+			GFGConversions::UInt16ToUIntV(wIndex, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UINT16_3:
+		{
+			maxWeightInfluence = 3;
+			GFGConversions::UInt16ToUIntV(wIndex, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UINT16_4:
+		{
+			maxWeightInfluence = 4;
+			GFGConversions::UInt16ToUIntV(wIndex, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UINT32_1:
+		{
+			maxWeightInfluence = 1;
+			GFGConversions::UInt32ToUIntV(wIndex, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UINT32_2:
+		{
+			maxWeightInfluence = 2;
+			GFGConversions::UInt32ToUIntV(wIndex, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UINT32_3:
+		{
+			maxWeightInfluence = 3;
+			GFGConversions::UInt32ToUIntV(wIndex, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UINT32_4:
+		{
+			maxWeightInfluence = 4;
+			GFGConversions::UInt32ToUIntV(wIndex, dataSize, data, maxWeightInfluence);
+			break;
+		}
+		case GFGDataType::UINT_2_10_10_10:
+		{;
+			uint32_t temp;
+			std::memcpy(&temp, &data, sizeof(uint32_t));
+			maxWeightInfluence = 3;
+			GFGConversions::UInt2_10_10_10ToUInts(wIndex, temp);
+			break;
+		}
+		case GFGDataType::UINT16_2_4:
+		{
+			maxWeightInfluence = 8;
+			GFGConversions::UInt16_2_4ToUInts(wIndex, maxWeightInfluence, dataSize, data);
+			break;
+		}
+		case GFGDataType::UINT8_4_4:
+		{
+			maxWeightInfluence = 16;
+			GFGConversions::UInt8_4_4ToUInts(wIndex, maxWeightInfluence, dataSize, data);
 			break;
 		}
 		default:

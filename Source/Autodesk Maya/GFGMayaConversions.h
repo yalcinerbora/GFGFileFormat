@@ -34,7 +34,7 @@ namespace GFGToMaya
 
 namespace MayaToGFG
 {
-	void						Transform(GFGTransform&, const MFnTransform&);
+	void						Transform(GFGTransform&, const MObject& mayaTransformNode);
 	GFGVertexComponentLogic		VertexComponentLogic(GFGMayaOptionsIndex);
 	void						Material(GFGMaterialHeader& gfgMat,
 										 std::vector<uint8_t>& textureData,

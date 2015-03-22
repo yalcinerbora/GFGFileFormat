@@ -17,21 +17,21 @@ namespace GFGConversions
 	uint16_t			FloatToHalf(float);
 	uint16_t			DoubleToHalf(double);
 
-	uint8_t			DoubleToUnorm8(double);
+	uint8_t				DoubleToUnorm8(double);
 	uint16_t			DoubleToUnorm16(double);
 	uint32_t			DoubleToUnorm32(double);
 
-	int8_t			DoubleToNorm8(double);
-	int16_t			DoubleToNorm16(double);
-	int32_t			DoubleToNorm32(double);
+	int8_t				DoubleToNorm8(double);
+	int16_t				DoubleToNorm16(double);
+	int32_t				DoubleToNorm32(double);
 	
-	uint8_t			FloatToUnorm8(float);
+	uint8_t				FloatToUnorm8(float);
 	uint16_t			FloatToUnorm16(float);
 	uint32_t			FloatToUnorm32(float);
 
-	int8_t			FloatToNorm8(float);
-	int16_t			FloatToNorm16(float);
-	int32_t			FloatToNorm32(float);
+	int8_t				FloatToNorm8(float);
+	int16_t				FloatToNorm16(float);
+	int32_t				FloatToNorm32(float);
 
 	// Special Multi Component Packing
 	uint32_t			IntsToInt2_10_10_10(const int[4]);
@@ -117,25 +117,43 @@ namespace GFGConversions
 	void				UInt16ToUIntV(unsigned int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
 	void				UInt32ToUIntV(unsigned int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
 
-	void				Int8ToUIntV(int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
-	void				Int16ToUIntV(int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
-	void				Int32ToUIntV(int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
+	void				Int8ToIntV(int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
+	void				Int16ToIntV(int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
+	void				Int32ToIntV(int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
 
 	// Special Multi Component UnPacking
 	void				Int2_10_10_10ToInts(int dataOut[4], uint32_t data);
 	void				Int2_10_10_10ToFloats(float dataOut[4], uint32_t data);
 	void				Int2_10_10_10ToDoubles(double dataOut[4], uint32_t data);
 
-	void				UInt2_10_10_10ToUInt(unsigned int dataOut[4], uint32_t data);
+	void				UInt2_10_10_10ToUInts(unsigned int dataOut[4], uint32_t data);
 	void				UInt2_10_10_10ToFloats(float dataOut[4], uint32_t data);
 	void				UInt2_10_10_10ToDoubles(double dataOut[4], uint32_t data);
 
 	void				UInt10F_11F_11FToFloats(float dataOut[3], uint32_t data);
 	void				UInt10F_11F_11FToDoubles(double dataOut[3], uint32_t data);
 
-	// Normal Packing
+	// Normal UnPacking
 	void				Custom_1_15N_16NToFloats(float dataOut[3], uint32_t data);
 	void				Custom_1_15N_16NToDoubles(double dataOut[3], uint32_t data);
+
+	// Multi Weight
+	void				 Unorm16_2_4ToDoubles(double dataOut[],
+											  unsigned int& maxWeightInfluence,
+											  size_t dataCapacity,
+											  const uint8_t data[]);
+	void				 Unorm8_4_4ToDoubles(double dataOut[],
+											 unsigned int& maxWeightInfluence,
+											 size_t dataCapacity,
+											 const uint8_t data[]);
+	void				 UInt16_2_4ToUInts(unsigned int dataOut[],
+										   unsigned int& maxWeightInfluence,
+										   size_t dataCapacity,
+										   const uint8_t data[]);
+	void				 UInt8_4_4ToUInts(unsigned int dataOut[],
+										  unsigned int& maxWeightInfluence,
+										  size_t dataCapacity,
+										  const uint8_t data[]);
 
 	// TODO Add mode Unpacking Modes
 };

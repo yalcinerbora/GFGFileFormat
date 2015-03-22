@@ -10,8 +10,6 @@ static auto GFGCrossProduct = [] (float out[3], const float a[3], const float b[
 	out[2] = a[0] * b[1] - a[1] * b[0];		
 };
 
-
-// Float Conversions
 uint16_t GFGConversions::FloatToHalf(float f)
 {
 	half_float::half result(f);
@@ -112,23 +110,23 @@ uint32_t GFGConversions::IntsToInt2_10_10_10(const int values[4])
 
 uint32_t GFGConversions::FloatsToInt2_10_10_10(const float values[4])
 {
-	static unsigned int max10BitValue = 0x1FF;
+	static unsigned int max10BitValueSigned = 0x1FF;
 	uint32_t result = 0;
 	result |= static_cast<uint32_t>(values[3] <= -1.0 ? -1.0 : values[3] >= 1.0 ? 1.0 : values[3] * 3) << 30;
-	result |= static_cast<uint32_t>(values[2] <= -1.0 ? -1.0 : values[2] >= 1.0 ? 1.0 : values[2] * max10BitValue) << 20;
-	result |= static_cast<uint32_t>(values[1] <= -1.0 ? -1.0 : values[1] >= 1.0 ? 1.0 : values[1] * max10BitValue) << 10;
-	result |= static_cast<uint32_t>(values[0] <= -1.0 ? -1.0 : values[0] >= 1.0 ? 1.0 : values[0] * max10BitValue) << 0;
+	result |= static_cast<uint32_t>(values[2] <= -1.0 ? -1.0 : values[2] >= 1.0 ? 1.0 : values[2] * max10BitValueSigned) << 20;
+	result |= static_cast<uint32_t>(values[1] <= -1.0 ? -1.0 : values[1] >= 1.0 ? 1.0 : values[1] * max10BitValueSigned) << 10;
+	result |= static_cast<uint32_t>(values[0] <= -1.0 ? -1.0 : values[0] >= 1.0 ? 1.0 : values[0] * max10BitValueSigned) << 0;
 	return result;
 }
 
 uint32_t GFGConversions::DoublesToInt2_10_10_10(const double values[4])
 {
-	static unsigned int max10BitValue = 0x1FF;
+	static unsigned int max10BitValueSigned = 0x1FF;
 	uint32_t result = 0;
 	result |= static_cast<uint32_t>(values[3] <= -1.0 ? -1.0 : values[3] >= 1.0 ? 1.0 : values[3] * 0x3) << 30;
-	result |= static_cast<uint32_t>(values[2] <= -1.0 ? -1.0 : values[2] >= 1.0 ? 1.0 : values[2] * max10BitValue) << 20;
-	result |= static_cast<uint32_t>(values[1] <= -1.0 ? -1.0 : values[1] >= 1.0 ? 1.0 : values[1] * max10BitValue) << 10;
-	result |= static_cast<uint32_t>(values[0] <= -1.0 ? -1.0 : values[0] >= 1.0 ? 1.0 : values[0] * max10BitValue) << 0;
+	result |= static_cast<uint32_t>(values[2] <= -1.0 ? -1.0 : values[2] >= 1.0 ? 1.0 : values[2] * max10BitValueSigned) << 20;
+	result |= static_cast<uint32_t>(values[1] <= -1.0 ? -1.0 : values[1] >= 1.0 ? 1.0 : values[1] * max10BitValueSigned) << 10;
+	result |= static_cast<uint32_t>(values[0] <= -1.0 ? -1.0 : values[0] >= 1.0 ? 1.0 : values[0] * max10BitValueSigned) << 0;
 	return result;
 }
 
@@ -144,23 +142,23 @@ uint32_t GFGConversions::UIntsToUInt2_10_10_10(const unsigned int values[4])
 
 uint32_t GFGConversions::FloatsToUInt2_10_10_10(const float values[4])
 {
-	static unsigned int max10BitValueSigned = 0x1FF;
+	static unsigned int max10BitValue = 0x3FF;
 	uint32_t result = 0;
 	result |= static_cast<uint32_t>(values[3] <= 0.0 ? 0.0 : values[3] >= 1.0 ? 1.0 : values[3] * 1) << 30;
-	result |= static_cast<uint32_t>(values[2] <= 0.0 ? 0.0 : values[2] >= 1.0 ? 1.0 : values[2] * max10BitValueSigned) << 20;
-	result |= static_cast<uint32_t>(values[1] <= 0.0 ? 0.0 : values[1] >= 1.0 ? 1.0 : values[1] * max10BitValueSigned) << 10;
-	result |= static_cast<uint32_t>(values[0] <= 0.0 ? 0.0 : values[0] >= 1.0 ? 1.0 : values[0] * max10BitValueSigned) << 0;
+	result |= static_cast<uint32_t>(values[2] <= 0.0 ? 0.0 : values[2] >= 1.0 ? 1.0 : values[2] * max10BitValue) << 20;
+	result |= static_cast<uint32_t>(values[1] <= 0.0 ? 0.0 : values[1] >= 1.0 ? 1.0 : values[1] * max10BitValue) << 10;
+	result |= static_cast<uint32_t>(values[0] <= 0.0 ? 0.0 : values[0] >= 1.0 ? 1.0 : values[0] * max10BitValue) << 0;
 	return result;
 }
 
 uint32_t GFGConversions::DoublesToUInt2_10_10_10(const double values[4])
 {
-	static unsigned int max10BitValueSigned = 0x1FF;
+	static unsigned int max10BitValue = 0x3FF;
 	uint32_t result = 0;
 	result |= static_cast<uint32_t>(values[3] <= 0.0 ? 0.0 : values[3] >= 1.0 ? 1.0 : values[3] * 3) << 30;
-	result |= static_cast<uint32_t>(values[2] <= 0.0 ? 0.0 : values[2] >= 1.0 ? 1.0 : values[2] * max10BitValueSigned) << 20;
-	result |= static_cast<uint32_t>(values[1] <= 0.0 ? 0.0 : values[1] >= 1.0 ? 1.0 : values[1] * max10BitValueSigned) << 10;
-	result |= static_cast<uint32_t>(values[0] <= 0.0 ? 0.0 : values[0] >= 1.0 ? 1.0 : values[0] * max10BitValueSigned) << 0;
+	result |= static_cast<uint32_t>(values[2] <= 0.0 ? 0.0 : values[2] >= 1.0 ? 1.0 : values[2] * max10BitValue) << 20;
+	result |= static_cast<uint32_t>(values[1] <= 0.0 ? 0.0 : values[1] >= 1.0 ? 1.0 : values[1] * max10BitValue) << 10;
+	result |= static_cast<uint32_t>(values[0] <= 0.0 ? 0.0 : values[0] >= 1.0 ? 1.0 : values[0] * max10BitValue) << 0;
 	return result;
 }
 
@@ -523,16 +521,14 @@ void GFGConversions::IntToInt32V(uint8_t dataOut[], size_t dataCapacity, const i
 	}
 }
 
-
-// Data Unpack (to Doubles)
 void GFGConversions::HalfToDoubleV(double dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount)
 {
-	assert(dataCapacity >= sizeof(double) * dataAmount);
+	assert(dataCapacity >= sizeof(half_float::half) * dataAmount);
 	for(unsigned int i = 0; i < dataAmount; i++)
 	{
 		half_float::half half;
 		std::memcpy(&half, dataIn + i * sizeof(half_float::half), sizeof(half_float::half));
-		dataOut[i] = half;
+		dataOut[i] = static_cast<double>(half);
 	}
 }
 
@@ -618,35 +614,115 @@ void GFGConversions::Norm32ToDoubleV(double dataOut[], size_t dataCapacity, cons
 	}
 }
 
+void GFGConversions::UInt8ToUIntV(unsigned int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount)
+{
+	assert(dataCapacity >= sizeof(uint8_t) * dataAmount);
+	for(unsigned int i = 0; i < dataAmount; i++)
+	{
+		int8_t temp;
+		std::memcpy(&temp, dataIn + i * sizeof(int8_t), sizeof(int8_t));
+		dataOut[i] = static_cast<unsigned int>(temp);
+	}
+}
+
+void GFGConversions::UInt16ToUIntV(unsigned int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount)
+{
+	assert(dataCapacity >= sizeof(int16_t) * dataAmount);
+	for(unsigned int i = 0; i < dataAmount; i++)
+	{
+		int16_t temp;
+		std::memcpy(&temp, dataIn + i * sizeof(int16_t), sizeof(int16_t));
+		dataOut[i] = static_cast<unsigned int>(temp);
+	}
+}
+
+void GFGConversions::UInt32ToUIntV(unsigned int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount)
+{
+	assert(dataCapacity >= sizeof(int32_t) * dataAmount);
+	for(unsigned int i = 0; i < dataAmount; i++)
+	{
+		int32_t temp;
+		std::memcpy(&temp, dataIn + i * sizeof(int32_t), sizeof(int32_t));
+		dataOut[i] = static_cast<unsigned int>(temp);
+	}
+}
+
 // TODO Implement
-//// Data Unpack (to Generic Int)
-//static void				UInt8VToUIntV(unsigned  int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
-//static void				UInt16VToUIntV(unsigned int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
-//static void				UInt32VToUIntV(unsigned int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
-//
-//static void				Int8VToUIntV(int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
-//static void				Int16VToUIntV(int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
-//static void				Int32VToUIntV(int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
-//
-//// Special Multi Component UnPacking
-//static void				Int2_10_10_10ToInts(int dataOut[4], uint32_t data);
-//static void				Int2_10_10_10ToFloats(float dataOut[4], uint32_t data);
+//static void				Int8ToIntV(int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
+//static void				Int16ToIntV(int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
+//static void				Int32ToIntV(int dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount);
+
+void GFGConversions::Int2_10_10_10ToInts(int dataOut[4], uint32_t data)
+{
+	int32_t temp = data;
+	temp = (temp >> 30) & 0x2;
+	dataOut[3] = static_cast<int>(temp);
+	temp = (temp >> 20) & 0x3FF;
+	dataOut[2] = static_cast<int>(temp);
+	temp = (temp >> 10) & 0x3FF;
+	dataOut[1] = static_cast<int>(temp);
+	temp = (temp >> 0) & 0x3FF;
+	dataOut[0] = static_cast<int>(temp);
+}
+
+void GFGConversions::Int2_10_10_10ToFloats(float dataOut[4], uint32_t data)
+{
+	static unsigned int max10BitValue = 0x3FF;
+	static unsigned int max10BitValueSigned = 0x1FF;
+	int32_t temp = data;
+	temp = (temp >> 30) & 0x2;
+	dataOut[3] = static_cast<float>(temp) / 0x2;
+	temp = (temp >> 20) & 0x3FF;
+	dataOut[2] = static_cast<float>(temp) / max10BitValue - max10BitValueSigned;
+	temp = (temp >> 10) & 0x3FF;
+	dataOut[1] = static_cast<float>(temp) / max10BitValue - max10BitValueSigned;
+	temp = (temp >> 0) & 0x3FF;
+	dataOut[0] = static_cast<float>(temp) / max10BitValue - max10BitValueSigned;
+}
+
 void GFGConversions::Int2_10_10_10ToDoubles(double dataOut[4], uint32_t data)
 {
+	static unsigned int max10BitValue = 0x3FF;
 	static unsigned int max10BitValueSigned = 0x1FF;
 	int32_t temp = data;
 	temp = (temp >> 30) & 0x2;
 	dataOut[3] = static_cast<double>(temp) / 0x2;
 	temp = (temp >> 20) & 0x3FF;
-	dataOut[2] = static_cast<double>(temp) / max10BitValueSigned;
+	dataOut[2] = static_cast<double>(temp) / max10BitValue - max10BitValueSigned;
 	temp = (temp >> 10) & 0x3FF;
-	dataOut[1] = static_cast<double>(temp) / max10BitValueSigned;
+	dataOut[1] = static_cast<double>(temp) / max10BitValue - max10BitValueSigned;
 	temp = (temp >> 0) & 0x3FF;
-	dataOut[0] = static_cast<double>(temp) / max10BitValueSigned;
+	dataOut[0] = static_cast<double>(temp) / max10BitValue - max10BitValueSigned;
 }
-//
-//static void				UInt2_10_10_10ToUInt(unsigned int dataOut[4], uint32_t data);
-//static void				UInt2_10_10_10ToFloats(float dataOut[4], uint32_t data);
+
+void GFGConversions::UInt2_10_10_10ToUInts(unsigned int dataOut[4], uint32_t data)
+{
+	uint32_t temp = data;
+	temp = (temp >> 30) & 0x2;
+	dataOut[3] = static_cast<unsigned int>(temp);
+	temp = (temp >> 20) & 0x3FF;
+	dataOut[2] = static_cast<unsigned int>(temp);
+	temp = (temp >> 10) & 0x3FF;
+	dataOut[1] = static_cast<unsigned int>(temp);
+	temp = (temp >> 0) & 0x3FF;
+	dataOut[0] = static_cast<unsigned int>(temp);
+}
+
+void GFGConversions::UInt2_10_10_10ToFloats(float dataOut[4], uint32_t data)
+{
+	static unsigned int max10BitValue = 0x3FF;
+	static unsigned int max10BitValueSigned = 0x1FF;
+	int32_t temp = data;
+	temp = (temp >> 30) & 0x2;
+	dataOut[3] = static_cast<float>(temp) / 0x2;
+	temp = (temp >> 20) & 0x3FF;
+	dataOut[2] = static_cast<float>(temp) / max10BitValue - max10BitValueSigned;
+	temp = (temp >> 10) & 0x3FF;
+	dataOut[1] = static_cast<float>(temp) / max10BitValue - max10BitValueSigned;
+	temp = (temp >> 0) & 0x3FF;
+	dataOut[0] = static_cast<float>(temp) / max10BitValue - max10BitValueSigned;
+}
+
 void GFGConversions::UInt2_10_10_10ToDoubles(double dataOut[4], uint32_t data)
 {
 	static unsigned int max10BitValue = 0x3FF;
@@ -673,7 +749,6 @@ void GFGConversions::UInt10F_11F_11FToDoubles(double dataOut[3], uint32_t data)
 	assert(false);
 }
 
-// Normal Packing
 void GFGConversions::Custom_1_15N_16NToFloats(float dataOut[3], uint32_t data)
 {
 	// Value needs to be a normalized value (vector)
@@ -696,4 +771,53 @@ void GFGConversions::Custom_1_15N_16NToDoubles(double dataOut[3], uint32_t data)
 	dataOut[1] = static_cast<double>(data >> 16) / max16bitSigned;
 	dataOut[0] = static_cast<double>(data >> 0) / max15bitSigned;
 	dataOut[2] = sqrt(dataOut[0] * dataOut[0] + dataOut[1] * dataOut[1]);
+}
+
+void GFGConversions::Unorm16_2_4ToDoubles(double dataOut[],
+										  unsigned int& maxWeightInfluence,
+										  size_t dataCapacity,
+										  const uint8_t data[])
+{
+	assert(dataCapacity >= sizeof(uint16_t) * 8);
+	GFGConversions::UNorm16ToDoubleV(dataOut, dataCapacity, data, maxWeightInfluence);
+	maxWeightInfluence = 8;
+}
+
+void GFGConversions::Unorm8_4_4ToDoubles(double dataOut[],
+										 unsigned int& maxWeightInfluence,
+										 size_t dataCapacity,
+										 const uint8_t data[])
+{
+	assert(dataCapacity >= sizeof(uint8_t) * 16);
+	GFGConversions::UNorm8ToDoubleV(dataOut, dataCapacity, data, maxWeightInfluence);
+	maxWeightInfluence = 16;
+}
+
+void GFGConversions::UInt16_2_4ToUInts(unsigned int dataOut[],
+									   unsigned int& maxWeightInfluence,
+									   size_t dataCapacity,
+									   const uint8_t data[])
+{
+	assert(dataCapacity >= sizeof(uint16_t) * 8);
+	for(unsigned int i = 0; i < 8; i++)
+	{
+		uint16_t temp;
+		std::memcpy(&temp, &data[i * (sizeof(uint16_t) / sizeof(uint8_t))],
+					sizeof(uint16_t));
+		dataOut[i] = static_cast<unsigned int>(temp);
+	}
+	maxWeightInfluence = 8;
+}
+
+void GFGConversions::UInt8_4_4ToUInts(unsigned int dataOut[],
+									  unsigned int& maxWeightInfluence,
+									  size_t dataCapacity,
+									  const uint8_t data[])
+{
+	assert(dataCapacity >= sizeof(uint8_t) * 16);
+	for(unsigned int i = 0; i < 8; i++)
+	{
+		dataOut[i] = static_cast<unsigned int>(data[i]);
+	}
+	maxWeightInfluence = 16;
 }

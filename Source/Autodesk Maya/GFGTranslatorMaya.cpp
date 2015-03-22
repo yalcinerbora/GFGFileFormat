@@ -34,14 +34,22 @@ Author(s):
 #include <maya/MDagModifier.h>
 #include <maya/MFnAttribute.h>
 #include <maya/MItDependencyGraph.h>
+#include <maya/MFnIkJoint.h>
+#include <maya/MItMeshVertex.h>
+#include <maya/MUintArray.h>
+#include <maya/MCommandResult.h>
+#include <maya/MItMeshFaceVertex.h>
+#include <maya/MFnSingleIndexedComponent.h>
 
 #include <string.h>
 #include <cassert>
 #include <algorithm>
 #include <map>
+#include <functional>
 
 #include "GFGTranslatorMaya.h"
 #include "GFG/GFGVertexElementTypes.h"
+#include "GFGMayaGraphIterator.h"
 
 const char* GFGTranslator::pluginName = "GFG";
 const char* GFGTranslator::pluginOptionScriptName = "GFGOpts";
@@ -137,7 +145,7 @@ const char* GFGTranslator::defaultOptions = ""
 																	// joints will be selected
 
 											//  Color Options
-											"vcData=55;"			//  Write Color as UNORM8_4
+											"vcData=54;"			//  Write Color as UNORM8_4
 											"vcLayout=0;"			// 0 Means Solo, 1 Means Group No
 
 											//***************************//
@@ -147,6 +155,8 @@ const char* GFGTranslator::defaultOptions = ""
 void GFGTranslator::ResetForImport()
 {
 	referencedMaterials.clear();
+	importedSkeletons.clear();
+	importedMeshes.clear();
 	errorList = "";
 }
 
@@ -155,6 +165,8 @@ void GFGTranslator::ResetForExport()
 	gfgExporter.Clear();
 	mayaMaterialNames.clear();
 	hierarcyNames.clear();
+	skeletonExport.clear();
+	skeletons.clear();
 	errorList = "";
 }
 
@@ -215,7 +227,7 @@ void GFGTranslator::FindOrCreateMaterial(MDagModifier& commList,
 										 uint32_t matIndex)
 {
 	MStatus status;
-	// Start Iterating from shading engines (direct iteration from surface shader does not give result
+	// Start Iterating from shading engines (direct iteration from surface shader does not give result)
 	// Find the shader with the name
 	MItDependencyNodes dgIterator(MFn::kShadingEngine, &status);
 	for(; !dgIterator.isDone(); dgIterator.next())
@@ -264,6 +276,32 @@ void GFGTranslator::FindOrCreateMaterial(MDagModifier& commList,
 	referencedMaterials.append(shaderName);
 }
 
+void GFGTranslator::FindLambert1()
+{
+	MStatus status;
+	// Start Iterating from shading engines (direct iteration from surface shader does not give result)
+	MItDependencyNodes dgIterator(MFn::kShadingEngine, &status);
+	for(; !dgIterator.isDone(); dgIterator.next())
+	{
+		// Surface Shader Dependency Node Find Bloat
+		MPlugArray materialReferences;
+		MFnDependencyNode shadingEngine(dgIterator.item(), &status);
+		MPlug shaderReference = shadingEngine.findPlug("surfaceShader", &status);
+		shaderReference.connectedTo(materialReferences, true, false, &status);
+		if(materialReferences.length() == 0)
+			continue;
+		MObject surfaceShaderNodeObj = materialReferences[0].node();
+	
+		// lamber1 shader also has its name fixed check name
+		MFnDependencyNode shaderNode(surfaceShaderNodeObj);
+		if(shaderNode.name() == "lambert1")
+		{
+			lambert1 = surfaceShaderNodeObj;
+			return;
+		}
+	}
+}
+
 MObject GFGTranslator::FindDAG(MString& name)
 {
 	MStatus status;
@@ -282,6 +320,7 @@ MObject GFGTranslator::FindDAG(MString& name)
 
 bool GFGTranslator::ImportMesh(MObject& meshTransform,
 							   MDGModifier& commandList,
+							   const GFGTransform& transform,
 							   const MString& meshName,
 							   uint32_t meshIndex)
 {
@@ -482,7 +521,8 @@ bool GFGTranslator::ImportMesh(MObject& meshTransform,
 										dataVertex.data() + meshPosPtr,
 										headerComp[componentId].dataType))
 		{
-			errorList += "Error: Failed to Create Mesh#" + meshIndex;
+			errorList += "Error: Failed to Create Mesh#";
+			errorList += meshIndex;
 			errorList += ". Position Data Type Mismatch.;";
 			return false;
 		}
@@ -527,7 +567,8 @@ bool GFGTranslator::ImportMesh(MObject& meshTransform,
 										dataVertex.data() + uvPosPtr,
 										headerComp[uvComponentIDs.back()].dataType))
 				{
-					errorList += "Error: Failed to Create Mesh#" + meshIndex; 
+					errorList += "Error: Failed to Create Mesh#";
+					errorList += meshIndex;
 					errorList += ". UV Data Type Mismatch.;";
 					return false;
 				}
@@ -571,7 +612,8 @@ bool GFGTranslator::ImportMesh(MObject& meshTransform,
 											dataVertex.data() + normalPosPtr,
 											headerComp[normalComponentID].dataType))
 				{
-					errorList += "Error: Failed to Create Mesh#" + meshIndex;
+					errorList += "Error: Failed to Create Mesh#";
+					errorList += meshIndex;
 					errorList += ". Normal Data Type Mismatch.;";
 					return false;
 				}
@@ -612,7 +654,8 @@ bool GFGTranslator::ImportMesh(MObject& meshTransform,
 											dataVertex.data() + colorPosPtr,
 											headerComp[colorComponentID].dataType))
 				{
-					errorList += "Error: Failed to Create Mesh#" + meshIndex; 
+					errorList += "Error: Failed to Create Mesh#";
+					errorList += meshIndex;
 					errorList += ". Color Data Type Mismatch.;";
 					return false;
 				}
@@ -685,6 +728,273 @@ bool GFGTranslator::ImportMesh(MObject& meshTransform,
 		mesh.setColors(colors, &setName);
 		mesh.assignColors(indices, &setName);
 	}
+	
+	// Apply Transform
+	// Apply Transform before weight import since skin cluster locks transformation
+	MFnTransform transformMaya(meshTransform);
+	GFGToMaya::Transform(transformMaya, transform);
+
+	// Weight Import Part
+	bool hasWeight = false;
+	bool hasWeightIndex = false;
+	if(gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)] ||
+	   gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)])
+	{
+		for(const GFGMeshSkelPair& meshSkel : gfgLoader.Header().meshSkeletonConnections.connections)
+		{
+			if(meshSkel.meshIndex != meshIndex) continue;
+
+			MObject mesh = meshTransform;
+			if(mesh == MObject::kNullObj || 
+			   importedSkeletons[meshSkel.skeletonIndex].length() == 0) 
+			   continue;
+
+			// Get the vertex weights and Indices
+			MObjectArray& joints = importedSkeletons[meshSkel.skeletonIndex];
+			std::vector<MDoubleArray> weights;
+			std::vector<MIntArray> weightIndices;
+
+			// WEIGHT
+			uint32_t weightComponentID;
+			hasWeight = gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)];
+			if(hasWeight)
+			{
+				auto findWeightFunc = [] (const GFGVertexComponent c) -> bool
+				{
+					return c.logic == GFGVertexComponentLogic::WEIGHT;
+				};
+				weightComponentID = static_cast<uint32_t>(std::distance(headerComp.begin(), std::find_if(headerComp.begin(), headerComp.end(), findWeightFunc)));
+				if(weightComponentID != headerComp.size())
+				{
+					uint64_t weightPosPtr = headerComp[weightComponentID].startOffset + headerComp[weightComponentID].internalOffset;
+					for(uint32_t i = 0; i < header.vertexCount; i++)
+					{
+						// Unconvert Data
+						unsigned int maxInf;
+						weights.emplace_back();
+						weights.back().setLength(30);	// Go Greedy Here
+						std::fill_n(&weights.back()[0], 30, -1.0);
+						if(!GFGWeight::UnConvertData(&weights.back()[0],
+													 maxInf,
+													 dataVertex.size() - weightPosPtr,
+													 dataVertex.data() + weightPosPtr,
+													 headerComp[weightComponentID].dataType))
+						{
+							errorList += "Warning: Failed to Import Weigts of the Mesh#";
+							errorList += meshIndex;
+							errorList += ". Weight Data Type Mismatch.;";
+							return false;
+						}
+						weights.back().setLength(maxInf);
+						uint64_t stride = headerComp[weightComponentID].stride;
+						if(stride == 0)
+						{
+							stride = GFGDataTypeByteSize[static_cast<uint32_t>(headerComp[weightComponentID].dataType)];
+						}
+						weightPosPtr += stride;
+					}
+				}
+			}
+			hasWeight &= (weights.size() != 0);
+
+			// WEIGHT INDEX
+			uint32_t weightIndexComponentID;
+			hasWeightIndex = gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)];
+			if(hasWeightIndex)
+			{
+				auto findWeightIndexFunc = [] (const GFGVertexComponent c) -> bool
+				{
+					return c.logic == GFGVertexComponentLogic::WEIGHT_INDEX;
+				};
+				weightIndexComponentID = static_cast<uint32_t>(std::distance(headerComp.begin(), std::find_if(headerComp.begin(), headerComp.end(), findWeightIndexFunc)));
+				if(weightIndexComponentID != headerComp.size())
+				{
+					uint64_t weightIndexPosPtr = headerComp[weightIndexComponentID].startOffset + headerComp[weightIndexComponentID].internalOffset;
+					for(uint32_t i = 0; i < header.vertexCount; i++)
+					{
+						// Unconvert Data
+						unsigned int maxInf;
+						weightIndices.emplace_back();
+						weightIndices.back().setLength(30);	// Go Greedy Here
+						std::fill_n(&weightIndices.back()[0], 30, -1);
+						if(!GFGWeightIndex::UnConvertData(reinterpret_cast<unsigned int*>(&weightIndices.back()[0]),
+														  maxInf,
+														  dataVertex.size() - weightIndexPosPtr,
+														  dataVertex.data() + weightIndexPosPtr,
+														  headerComp[weightIndexComponentID].dataType))
+						{
+							errorList += "Error: Failed to Import Weigts of Mesh#";
+							errorList += meshIndex;
+							errorList += ". Weight Index Data Type Mismatch.;";
+							return false;
+						}
+						weightIndices.back().setLength(maxInf);
+						uint64_t stride = headerComp[weightIndexComponentID].stride;
+						if(stride == 0)
+						{
+							stride = GFGDataTypeByteSize[static_cast<uint32_t>(headerComp[weightIndexComponentID].dataType)];
+						}
+						weightIndexPosPtr += stride;
+					}
+				}
+			}
+			hasWeightIndex &= (weightIndices.size() != 0);
+
+			//// Print Weights
+			//cout << "Weights of " << meshName << endl;
+			//for(const MDoubleArray vertexWeights : weights)
+			//{
+			//	for(unsigned int i = 0;
+			//		i < vertexWeights.length() && vertexWeights[i] != -1.0;
+			//		i++)
+			//	{
+			//		cout << vertexWeights[i] << " " << endl;
+			//	}
+			//	cout << endl;
+			//}
+			//cout << endl;
+			//cout << "Weights Index of " << meshName << endl;
+			//for(const MIntArray vertexWeightIndices : weightIndices)
+			//{
+			//	for(unsigned int i = 0;
+			//		i < vertexWeightIndices.length() && vertexWeightIndices[i] != -1;
+			//		i++)
+			//	{
+			//		cout << vertexWeightIndices[i] << " " << endl;
+			//	}
+			//	cout << endl;
+			//}
+
+			if(hasWeight ||
+			   hasWeightIndex)
+			{
+				// If has weight go make skCluster
+				MFnDagNode meshNode(mesh);
+				MString meshName = meshNode.name();
+
+				MString clusterName = meshName.substring(0, meshName.index('_'));
+				clusterName += "Cluster";
+				clusterName += meshSkel.meshIndex;
+				clusterName += meshSkel.skeletonIndex;
+
+				// Create SK Cluster
+				// Bind Influence Objects (Skeleton)
+				// Bind Mesh
+				//MString result;
+				MString result;
+				MString skinClusterMelCommand =
+					"skinCluster -bindMethod 0 -normalizeWeights 2 -weightDistribution 0 "
+					"-rui false "
+					"-tsb"
+					"-name " + clusterName + " ";
+				for(unsigned int i = 0; i < joints.length(); i++)
+				{
+					MFnDagNode node(joints[i]);
+					skinClusterMelCommand += node.name();
+					skinClusterMelCommand += " ";
+				}
+				skinClusterMelCommand += meshName;
+				status = MGlobal::executeCommand(skinClusterMelCommand,
+												 result);
+
+				// Putting this error here it creates the cluster but unable to return the result
+				//if(status != MStatus::kSuccess)
+				//	cout << "Error" << status << endl;
+
+				// TODO execute command with mel functions "skinCluster" Does not return generated node's name.
+				// Prematurely create the node and dont give a fuck
+				// Use the already existing named node  and try to set weight
+				// Get the cluster object
+				MObject skinCluster;
+				for(MItDependencyNodes it(MFn::kSkinClusterFilter);
+					!it.isDone();
+					it.next())
+				{
+					MFnSkinCluster cluster(it.item());
+					if(cluster.name() == clusterName)
+						skinCluster = it.item();
+				}
+
+
+				// Iterate Through each mesh
+				// For each vertex
+				// TODO: Perf prob will be slow change more proper way when you
+				// learn more about maya
+				MFnSkinCluster cluster(skinCluster, &status);
+				if(status != MStatus::kSuccess)
+					cout << "Error On Cluster Creation : " << status << endl;
+
+
+				// Zero out all vertices helper array
+				MDoubleArray zeroArray;
+				MIntArray indices;
+				MDagPathArray jointPaths;
+				uint32_t infObjSize = cluster.influenceObjects(jointPaths);
+				for(unsigned int i = 0; i < infObjSize; i++)
+				{
+					zeroArray.append(0.0);
+					indices.append(static_cast<int>(i));
+				}
+
+				
+				// We Create the cluster, now create index map array
+				std::map<uint32_t, uint32_t> indexLookup;
+				for(unsigned int i = 0; i < joints.length(); i++)
+				{
+					for(unsigned j = 0; j < jointPaths.length(); j++)
+					{
+						if(joints[i] == jointPaths[j].node())
+						{
+							indexLookup.insert(std::make_pair(i, j));
+							break;
+						}
+					}
+				}
+				
+				MDagPath meshPath;
+				MFnDagNode node(meshTransform);
+				node.getPath(meshPath);
+				auto itI = weightIndices.begin();
+				auto itW = weights.begin();
+				for(MItMeshVertex vertexIterator(meshPath); !vertexIterator.isDone(); vertexIterator.next())
+				{
+					// zero all
+					status = cluster.setWeights(meshPath, vertexIterator.currentItem(),
+												indices, zeroArray, false);
+					if(status != MStatus::kSuccess)
+						cout << "Error On Zeroing Weights" << status << endl;
+
+					// set other
+					assert(itI->length() == itW->length());
+					for(unsigned int i = 0; i < itW->length(); i++)
+					{
+
+						auto location = indexLookup.find((*itI)[i]);
+						if(location != indexLookup.end())
+							(*itI)[i] = location->second;
+						else
+							cerr << "Error finding skeleton on lookup table.." << endl;
+
+						// Cut the length
+						if((*itW)[i] == 0.0)
+						{
+							itW->setLength(i);
+							itI->setLength(i);
+							break;
+						}
+					}
+					status = cluster.setWeights(meshPath, vertexIterator.currentItem(),
+												*itI, *itW, false);
+					if(status != MStatus::kSuccess)
+								cout << "Error On Weight Set" << status << endl;
+					
+					itI++;
+					itW++;
+				}
+			}
+		}
+	}
+
 
 	// Append Commands For this Object
 	// Shade with Materials
@@ -743,11 +1053,67 @@ bool GFGTranslator::ImportMesh(MObject& meshTransform,
 		commandList.commandToExecute("select -r " + dagNode.name());
 		commandList.commandToExecute("toggleShadeMode");
 	}
+	
 	commandList.commandToExecute("polyMergeVertex -d 0.0 -am 1 -ch 1 " + dagNode.name());
+	commandList.doIt();
 
 	cout << "Mesh \"" << dagNode.name() << "\" loaded successfully.." << endl;
 	return true;
 }
+
+bool GFGTranslator::ImportSkeleton(const MString& skeletonName,
+								   uint32_t skeletonIndex)
+{
+	const std::vector<GFGBone>& skeleton = gfgLoader.Header().skeletons[skeletonIndex].bones;
+	const std::vector<GFGTransform> boneTransforms = gfgLoader.Header().bonetransformData.transforms;
+
+	MDagModifier dagModifier;
+	MObjectArray& joints = importedSkeletons[skeletonIndex];
+	uint32_t index = -1;
+	MString boneName = "_Bone";
+	for(const GFGBone& bone : skeleton)
+	{
+		index++;
+
+		MObject parent = MObject::kNullObj;
+		if(bone.parentIndex < joints.length())
+			parent = joints[bone.parentIndex];
+
+		MObject node = dagModifier.createNode("joint", parent);
+		dagModifier.doIt();
+		MFnDagNode dagNode(node);
+
+		MString boneName = skeletonName;
+		MString boneNameReturn;
+		boneName += "_Bone";
+		boneName += index;
+		boneNameReturn = dagNode.setName(boneName);
+
+		if(boneNameReturn != boneName)
+		{
+			// We have same named skeleton skip
+			errorList += "Error: Already have bone named \\\"";
+			errorList += boneName;
+			errorList += "\\\", skipping exporting skeleton#";
+			errorList += skeletonIndex;
+			errorList += ";";
+			dagModifier.deleteNode(node);
+			dagModifier.doIt();
+			joints.setLength(0);
+			return false;
+		}
+
+		MFnTransform transform(node);
+		MFnIkJoint joint(node);
+		dagModifier.commandToExecute("setAttr \"" + boneName + ".radius\" 0.18");
+		dagModifier.doIt();
+		GFGToMaya::Transform(transform, boneTransforms.at(bone.transformIndex));
+
+		joints.append(node);
+	}
+	return true;
+}
+
 
 MStatus GFGTranslator::ExportSelected(std::ofstream& fileStream)
 {
@@ -771,12 +1137,45 @@ MStatus GFGTranslator::ExportSelected(std::ofstream& fileStream)
 		return MS::kFailure;
 	}
 
+
+	// Export All Skeleton In case of weight export skeleton export
 	// Iterator over DAG
-	MItDag dagIterator(MItDag::kDepthFirst, MFn::kInvalid, &status);
+	MItDag dagIterator(MItDag::kDepthFirst, MFn::kJoint, &status);
 	if(!status)
 	{
 		cerr << "Failed to init DAG iterator." << endl;
 		return MS::kFailure;
+	}
+
+	if(gfgOptions.skelOn ||
+	   gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)] ||
+	   gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)])
+	{
+		for(;!dagIterator.isDone();
+			dagIterator.next())
+		{
+			MDagPath path;
+			dagIterator.getPath(path);
+			if(!path.hasFn(MFn::kHikFKJoint))
+			{
+				// Show that we traversing this node
+				// Check Joints First
+				bool inSelection = false;
+				for(MItSelectionList selectionCheck(selection);
+					!selectionCheck.isDone();
+					selectionCheck.next())
+				{
+					MObject node;
+					selectionCheck.getDependNode(node);
+					if(node == dagIterator.currentItem())
+					{
+						inSelection = true;
+						break;
+					}	
+				}
+				ExportSkeleton(path, inSelection);
+			}
+		}
 	}
 
 	// For each obj on the selection list
@@ -788,11 +1187,10 @@ MStatus GFGTranslator::ExportSelected(std::ofstream& fileStream)
 			cerr << "Failed to get selected objects DAG path." << endl;
 			return MS::kFailure;
 		}
-
+	
 		// Move Iterator to Current Object
 		if(!dagIterator.reset(objectPath.node(),
-							  MItDag::kDepthFirst,
-							  MFn::kInvalid))
+							  MItDag::kDepthFirst))
 		{
 			cerr << "Failed to move DAG iterator to selected object." << endl;
 			return MS::kFailure;
@@ -815,7 +1213,7 @@ MStatus GFGTranslator::ExportSelected(std::ofstream& fileStream)
 	}
 
 	// DEBUG
-	PrintAllGFGBlocks(gfgExporter.Header());
+	//PrintAllGFGBlocks(gfgExporter.Header());
 	cout << "Exporting Done!" << endl;
 	return MStatus::kSuccess;
 }
@@ -852,7 +1250,6 @@ MStatus GFGTranslator::ExportAllIterator(MItDag& dagIterator)
 				// Check this transform contributes to the polygonal surfaces
 				if(!IsRequiredTransform(dagPath))
 				{
-					cout << "Skipping unsupported DAG Object." << endl;
 					continue;
 				}
 
@@ -878,7 +1275,7 @@ MStatus GFGTranslator::ExportAllIterator(MItDag& dagIterator)
 				// Find Parent
 				// Maya Allows Multi Parent
 				// Find the parent of this path
-				MDagPath parentPath = dagPath;
+				MDagPath parentPath = dagPath;	// With dag path each path has unique parent
 				parentPath.pop();
 					
 				// Node Indices
@@ -887,38 +1284,12 @@ MStatus GFGTranslator::ExportAllIterator(MItDag& dagIterator)
 				if( it != hierarcyNames.end())
 				{
 					parentIndex = static_cast<uint32_t>(std::distance(hierarcyNames.begin(), it));	
-					MayaToGFG::Transform(transform, transData);
+					MayaToGFG::Transform(transform, dagPath.node());
 				}
 				else 
 				{
 					cout << "This nodes parent will not be exported baking its transform instead." << endl;
-
-					// We have a parent that will not be exported
-					// We need to bake its parents transform (and its parents... untill root)
-					parentPath = dagPath;
-					MMatrix worldMatrix = MMatrix::identity;
-					while(parentPath.length() > 0)
-					{
-						if(parentPath.hasFn(MFn::kTransform))
-						{
-							MFnTransform transformParent(parentPath);
-
-							worldMatrix *= transformParent.transformationMatrix();
-
-							GFGTransform transformGFGParent;
-							MayaToGFG::Transform(transformGFGParent, transformParent);
-							for(int a = 0; a < 3; a++)
-							{
-								transform.rotate[a] += transformGFGParent.rotate[a];
-								transform.scale[a] *= transformGFGParent.scale[a];
-							}
-						}
-						parentPath.pop();
-					}
-
-					transform.translate[0] =  static_cast<float>(worldMatrix(3, 0));
-					transform.translate[1] = static_cast<float>(worldMatrix(3, 1));
-					transform.translate[2] = static_cast<float>(worldMatrix(3, 2));
+					BakeTransform(transform, dagPath);
 				}
 
 				// DEBUG
@@ -940,7 +1311,7 @@ MStatus GFGTranslator::ExportAllIterator(MItDag& dagIterator)
 					// Export This Mesh
 					if(!ExportMesh(transform, dagPath, parentIndex))
 					{
-						cerr << "Error Encountered while exporting mesh on Node\t" << dagPath.fullPathName() << endl;
+						cerr << "Error Encountered while exporting mesh on Node\t" << dagPath.partialPathName() << endl;
 					}
 				}
 				else
@@ -960,18 +1331,9 @@ MStatus GFGTranslator::ExportAllIterator(MItDag& dagIterator)
 			}
 			else if(dagPath.hasFn(MFn::kMesh))
 			{}
-			else if(dagPath.hasFn(MFn::kJoint))
+			else
 			{
-				// Show that we traversing this node
-				cout << "On Node : " << dagPath.fullPathName() << endl;
-
-				// Skeleton Export portion
-				// This Function Below Traverses the Entire Joint Hierarchy
-				// So we also iterating the DAG we need to make sure to 
-				// call this function only if this node is a root joint 
-
-				// Check if this node is a root joint
-				ExportSkeleton(dagPath);
+				cout << "Skipping unsupported DAG Object." << endl;
 			}
 		}
 	}
@@ -991,7 +1353,29 @@ MStatus GFGTranslator::ExportAll(std::ofstream& fileStream)
 		return MS::kFailure;
 	}
 
-	status = ExportAllIterator(dagIterator);
+	if(gfgOptions.skelOn ||
+	   gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)] ||
+	   gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)])
+	{
+		for(dagIterator.reset(MObject::kNullObj, 
+								MItDag::kBreadthFirst, 
+								MFn::kJoint);
+			!dagIterator.isDone();
+			dagIterator.next())
+		{
+			MDagPath path;
+			dagIterator.getPath(path);
+			if(!path.hasFn(MFn::kHikFKJoint))
+			{
+				// Show that we traversing this node
+				// Check Joints First
+				ExportSkeleton(path, true);
+			}
+		}
+	}
+
+	MItDag dagIteratorScene(MItDag::kBreadthFirst, MFn::kInvalid, &status);
+	status = ExportAllIterator(dagIteratorScene);
 	if(status != MS::kSuccess)
 	{
 		cerr << "Export Failure" << endl;
@@ -1008,7 +1392,7 @@ MStatus GFGTranslator::ExportAll(std::ofstream& fileStream)
 	}
 
 	// DEBUG
-	PrintAllGFGBlocks(gfgExporter.Header());
+	//PrintAllGFGBlocks(gfgExporter.Header());
 	cout << "Exporting Done!" << endl;
 	return MS::kSuccess;
 }
@@ -1031,14 +1415,15 @@ MStatus GFGTranslator::Import(std::ifstream& fileReader, const MString fileName)
 	GFGFileError error = gfgLoader.ValidateAndOpen();
 	if(error != GFGFileError::OK)
 	{
-		errorList += "FatalError: Unable to Validate GFG File. Error Code : " + static_cast<int>(error);
+		errorList += "FatalError: Unable to Validate GFG File. Error Code : ";
+		errorList += static_cast<int>(error);
 		errorList += ".;";
 		return MStatus::kFailure;
 	}
 
 	MDagModifier materialImportCommands;// Batch entire material creation commands to this
 	MDagModifier meshImportCommands;	// Batch entire mesh mel commands to this
-	MObjectArray dagTransforms;
+	MObjectArray dagTransforms;			// Imported transforms
 	
 	// ExportStart
 	MSelectionList SelectedBeforeImports;
@@ -1054,6 +1439,10 @@ MStatus GFGTranslator::Import(std::ifstream& fileReader, const MString fileName)
 	// Only Import First Animation for each skeleton
 	// GFG Supports multiple animation over skeleton
 	// However Maya supports only one??? (need to check)
+
+	// Pre allocate mesh index
+	importedMeshes.setLength(gfgLoader.Header().meshList.nodeAmount);
+	importedSkeletons.resize(gfgLoader.Header().skeletonList.nodeAmount);
 
 	// Start with importing materials	
 	if(gfgOptions.matOn)
@@ -1075,6 +1464,27 @@ MStatus GFGTranslator::Import(std::ifstream& fileReader, const MString fileName)
 		}
 	}
 	materialImportCommands.doIt();
+
+	// Then Skeletons
+	uint32_t index = -1;
+	if(gfgOptions.skelOn)
+	{
+		for(const GFGSkeletonHeader& skeleton : gfgLoader.Header().skeletons)
+		{
+			index++;
+
+			// Naming Convention
+			MString skeletonGeneratedName = fileName.substring(0, fileName.index('.') - 1) + "_";
+			skeletonGeneratedName += "Skel";
+			skeletonGeneratedName += index;
+
+			if(!ImportSkeleton(skeletonGeneratedName, index))
+			{
+				// Some Stuff Went Wrong
+				continue;
+			}
+		}
+	}
 
 	// Iterate Nodes if Nodes Available
 	if(gfgOptions.hierOn && gfgLoader.Header().sceneHierarchy.nodeAmount > 0)
@@ -1133,23 +1543,26 @@ MStatus GFGTranslator::Import(std::ifstream& fileReader, const MString fileName)
 				MObject meshTransform = FindDAG(meshGeneratedName);
 				if(meshTransform == MObject::kNullObj)
 				{
+					// TODO: Bug, Skeleton bind locks transforms so that code below dos not work
+					// Transform Convert
+					const GFGTransform& gfgTransform = gfgLoader.Header().transformData.transforms[node.transformIndex];
+					
 					// Create
-					if(!ImportMesh(meshTransform, meshImportCommands, meshGeneratedName, node.meshReference))
+					if(!ImportMesh(meshTransform, meshImportCommands, gfgTransform, meshGeneratedName, node.meshReference))
 					{
-						// Some Stuff Went Wrong Break
-						errorList += "Error: Unable to Import Mesh#" + node.meshReference;
+						// Some Stuff Went Wrong
+						errorList += "Error: Unable to Import Mesh#";
+						errorList += node.meshReference;
 						errorList += ". Skipping...;";
+						dagTransforms.append(meshTransform);	// to prevent non-hier export to try again
 						continue;
 					}
 					// This Dag is on root Now
 					MDagModifier mod;
 					status = mod.reparentNode(meshTransform, dagTransforms[node.parentIndex]);
 					status = mod.doIt();
-					
-					// Transform Convert
-					MFnTransform mayaTransform(meshTransform);
-					const GFGTransform& gfgTransform = gfgLoader.Header().transformData.transforms[node.transformIndex];
-					GFGToMaya::Transform(mayaTransform, gfgTransform);
+
+					importedMeshes[node.meshReference] = meshTransform;
 				}
 				else
 				{
@@ -1167,7 +1580,7 @@ MStatus GFGTranslator::Import(std::ifstream& fileReader, const MString fileName)
 	//}
 	
 	// Import Remaining Mesh (that have not associated with a node)
-	uint32_t index = -1;
+	index = -1;
 	for(const GFGMeshHeader& mesh : gfgLoader.Header().meshes)
 	{
 		index++;
@@ -1195,12 +1608,20 @@ MStatus GFGTranslator::Import(std::ifstream& fileReader, const MString fileName)
 		MObject meshTransform = FindDAG(meshGeneratedName);
 		if(meshTransform == MObject::kNullObj)
 		{
-			// Create
-			if(!ImportMesh(meshTransform, meshImportCommands, meshGeneratedName, index))
+			GFGTransform t
 			{
-				// Some Stuff Went Wrong Break
-				errorList += "Unable to Import Mesh#" + index;
-				errorList += ".Skipping..;";
+				{0.0f, 0.0f, 0.0f},
+				{0.0f, 0.0f, 0.0f},
+				{1.0f, 1.0f, 1.0f}
+			};
+
+			// Create
+			if(!ImportMesh(meshTransform, meshImportCommands, t, meshGeneratedName, index))
+			{
+				// Some Stuff Went Wrong
+				errorList += "Error: Unable to Import Mesh#";
+				errorList += index;
+				errorList += ".Skipping...;";
 				continue;
 			}
 			dagTransforms.append(meshTransform);
@@ -1235,7 +1656,14 @@ bool GFGTranslator::IsRequiredTransform(const MDagPath& path) const
 		cerr << "Failed to init DAG iterator." << endl;
 		return false;
 	}
-	return !dagIterator.isDone();
+
+	for(; !dagIterator.isDone();
+		dagIterator.next())
+	{
+		if(dagIterator.currentItem().hasFn(MFn::kMesh))
+			return true;
+	}
+	return false;
 }
 
 GFGMayaOptionsIndex GFGTranslator::ElementIndexToComponent(unsigned int current) const
@@ -1296,6 +1724,7 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 	// Get SkinClusters and Materials which are referenced by this object
 	// and UVSet names since some api queries with that
 	GetReferencedMaterials(materials, polyMatIndices, instanceNo, mesh);
+	if(materials.length() == 0) materials.insert(lambert1, 0);
 	if(!GetSkData(skClusters, directShapePath)){ return MS::kFailure; }
 	mesh.getUVSetNames(uvSetNames);
 	hasUvs = (mesh.numUVSets() > 0) ? true : false;
@@ -1331,7 +1760,7 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 	{
 		if(mIt.polygonVertexCount() > 3)
 		{
-			errorList += "Error: Non-Triangle Polygon Found. Skipping Mesh \\\"" + p.fullPathName() + "\\\".;";
+			errorList += "Error: Non-Triangle Polygon Found. Skipping Mesh \\\"" + p.partialPathName() + "\\\".;";
 			return MS::kFailure;
 		}
 	}
@@ -1416,10 +1845,6 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 	MFloatVectorArray binormals;
 	MColorArray colors;
 
-	// Populated per vertex
-	std::vector<MDoubleArray> boneWeights(skClusters.length());
-	std::vector<unsigned int> jointCount(skClusters.length(), 0);
-
 	// Used to lookup singular indexed manner
 	std::map<GFGMayaMultiIndex, size_t>  vertexLookup;
 
@@ -1443,45 +1868,112 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 	//	cout << tangents[z].x << " " << tangents[z].y << " " << tangents[z].z << endl;
 	//}
 
+	// Weight Related Objects
+	MDagPathArray infObjs;
+	MDoubleArray boneWeights;
+	unsigned int jointCount;
+	uint32_t referencedSkeleton = -1;
+
+	// Resolve which skeleton is bound to the skins
+	// Create Lookup Map for GFG Joint ordering and Maya Influence Object Index
+	std::map<uint32_t, uint32_t> skeletonIndexLookup;
+	if(hasWeights)
+	{
+		MFnSkinCluster skin(skClusters[0]);
+		skin.influenceObjects(infObjs);
+
+		uint32_t index = 0;
+		for(const MObjectArray& skeleton : skeletons)
+		{
+			MDagPath path = infObjs[0];
+			MObject gfgRoot;
+			do
+			{
+				if(path.hasFn(MFn::kJoint))
+					gfgRoot = path.node();
+			}
+			while(path.pop());
+
+			if(gfgRoot == skeleton[0])
+			{
+				referencedSkeleton = index;
+			}
+			index++;
+		}
+		cout << "This Mesh Uses Skeleton : " << referencedSkeleton << endl;
+
+		if(referencedSkeleton != -1)
+		{
+			for(unsigned int i = 0; i < infObjs.length(); i++)
+			{
+				MFnDagNode node(infObjs[i]);
+				for(unsigned int j = 0; j < skeletons[referencedSkeleton].length(); j++)
+				{
+					if(infObjs[i].node() == skeletons[referencedSkeleton][j])
+					{
+						skeletonIndexLookup.insert(std::make_pair(i, j));
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	// Last Population of the Vertices
+	MFnSkinCluster skin(skClusters[0]);
+	MFnSingleIndexedComponent c;
+	MObject component = c.create(MFn::kMeshVertComponent);
+	MFnSingleIndexedComponent comp(component); 
+	comp.setCompleteData(mesh.numVertices());
+
+	MStatus status = skin.getWeights(directShapePath,
+									 component,
+									 boneWeights,
+									 jointCount);
+
+	if(status != MStatus::kSuccess)
+	{
+		cout << "ERROR : " << status << endl;
+	}
+
+	////DEBUG
+	//cout << "****************************************" << endl;
+	//cout << "\tThis Faces Weights" << endl;
+	//for(unsigned int aa = 0; aa < boneWeights.length(); aa++)
+	//{
+	//	if(aa % jointCount == 0)
+	//		cout << endl;
+	//	cout << "\t\t" << boneWeights[aa] << endl;
+	//}
+	//cout << endl;
+	//cout << "****************************************" << endl;
+
 	// Start Iterating Each Face
 	cout << "Starting to Iterate Faces..." << endl;
 	for(MItMeshPolygon mIt(p.node());
 		!mIt.isDone();
 		mIt.next())
 	{
-		// Popluate Weights for this face
-		if(hasWeights)
-		{
-			for(unsigned int i = 0; i < skClusters.length(); i++)
-			{
-				boneWeights[i].clear();
-				MFnSkinCluster skin(skClusters[i]);
-
-				MStatus status = skin.getWeights(directShapePath,
-												 mIt.currentItem(),
-												 boneWeights[i],
-												 jointCount[i]);
-			}
-		}
-
 		// For Each Vertex of this Poly
-		for(unsigned int i = 0; i < mIt.polygonVertexCount(); i++)
+		for(MItMeshFaceVertex vertexIterator(p, mIt.currentItem());
+			!vertexIterator.isDone();
+			vertexIterator.next())
 		{
 			// Find this vertex if its already in the array
 			GFGMayaMultiIndex m;
 
 			if(gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::POSITION)])
-				m.posIndex = mIt.vertexIndex(i);
-
+				m.posIndex = vertexIterator.vertId();
+				
 			if(hasUvs && gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::UV)])
 				for(int j = 0; j < mesh.numUVSets(); j++)
 				{
 					int uvIndex;
-					mIt.getUVIndex(static_cast<uint32_t>(i), uvIndex, &uvSetNames[j]);
+					vertexIterator.getUVIndex(uvIndex, &uvSetNames[j]);
 					m.uvIndex.append(std::max(uvIndex, 0));
 				}
 			if(gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::NORMAL)])
-				m.normalIndex = mIt.normalIndex(i);
+				m.normalIndex = vertexIterator.normalId();
 
 			// TODO: Tangent is stored for every (vertex-face) dont use tangent index as a unique identifier, test it
 			//if(gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::TANGENT)] ||
@@ -1525,8 +2017,8 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 
 							// Export Position
 							double posData[4];
-							positions[mIt.vertexIndex(i)].get(posData);
-							WritePosition(vertexData, posData);
+							positions[vertexIterator.vertId()].get(posData);
+							if(!WritePosition(vertexData, posData)) return MStatus::kFailure;
 							break;
 						}
 						case GFGMayaOptionsIndex::NORMAL:
@@ -1537,17 +2029,17 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 							double tangentDataD[3];
 							double binormalDataD[3];
 
-							normalDataD[0] = normals[mIt.normalIndex(i)].x;
-							normalDataD[1] = normals[mIt.normalIndex(i)].y;
-							normalDataD[2] = normals[mIt.normalIndex(i)].z;
+							normalDataD[0] = normals[vertexIterator.normalId()].x;
+							normalDataD[1] = normals[vertexIterator.normalId()].y;
+							normalDataD[2] = normals[vertexIterator.normalId()].z;
 
-							tangentDataD[0] = tangents[mIt.tangentIndex(i)].x;
-							tangentDataD[1] = tangents[mIt.tangentIndex(i)].y;
-							tangentDataD[2] = tangents[mIt.tangentIndex(i)].z;
+							tangentDataD[0] = tangents[vertexIterator.normalId()].x;
+							tangentDataD[1] = tangents[vertexIterator.normalId()].y;
+							tangentDataD[2] = tangents[vertexIterator.normalId()].z;
 
-							binormalDataD[0] = binormals[mIt.tangentIndex(i)].x;
-							binormalDataD[1] = binormals[mIt.tangentIndex(i)].y;
-							binormalDataD[2] = binormals[mIt.tangentIndex(i)].z;
+							binormalDataD[0] = binormals[vertexIterator.normalId()].x;
+							binormalDataD[1] = binormals[vertexIterator.normalId()].y;
+							binormalDataD[2] = binormals[vertexIterator.normalId()].z;
 
 							GFGMayaOptionsIndex type = ElementIndexToComponent(eIndex);
 							if(type == GFGMayaOptionsIndex::NORMAL)
@@ -1556,22 +2048,24 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 									break;
 
 								// Export Normal
-								WriteNormal(vertexData, 
-											normalDataD,
-											tangentDataD,
-											binormalDataD);
+								if(!WriteNormal(vertexData,
+									normalDataD,
+									tangentDataD,
+									binormalDataD))
+									return MStatus::kFailure;
 							}
-							
+
 							else if(type == GFGMayaOptionsIndex::TANGENT)
 							{
 								if(!gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::TANGENT)])
 									break;
 
 								// Export Tangent
-								WriteTangent(vertexData,
-											 normalDataD,
-											 tangentDataD,
-											 binormalDataD);
+								if(!WriteTangent(vertexData,
+									normalDataD,
+									tangentDataD,
+									binormalDataD))
+									return MStatus::kFailure;
 							}
 							else if(type == GFGMayaOptionsIndex::BINORMAL)
 							{
@@ -1579,44 +2073,92 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 									break;
 
 								// Export Binormal
-								WriteBinormal(vertexData,
-											  normalDataD,
-											  tangentDataD,
-											  binormalDataD);
+								if(!WriteBinormal(vertexData,
+									normalDataD,
+									tangentDataD,
+									binormalDataD))
+									return MStatus::kFailure;
 							}
 							break;
-						}						
+						}
 						case GFGMayaOptionsIndex::UV:
 						{
 							// Export UV
 							if(!hasUvs || !gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::UV)])
 								break;
 
-							double uvData[2];							
+							double uvData[2];
 							for(int uvIndex = 0; uvIndex < mesh.numUVSets(); uvIndex++)
 							{
 								int index;
-								mIt.getUVIndex(i, index, &uvSetNames[uvIndex]);
+								vertexIterator.getUVIndex(index, &uvSetNames[uvIndex]);
 								uvData[0] = static_cast<double>(us[uvIndex][std::max(index, 0)]);
 								uvData[1] = static_cast<double>(vs[uvIndex][std::max(index, 0)]);
-								WriteUV(vertexData, uvData);
+								if(!WriteUV(vertexData, uvData)) return MStatus::kFailure;
 							}
 							break;
 						}
 						case GFGMayaOptionsIndex::WEIGHT:
-						{
-							if(!gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)])
-								break;
-
-							// TODO Export Weight
-							break;
-						}
 						case GFGMayaOptionsIndex::WEIGHT_INDEX:
 						{
-							if(!gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)])
+							if(!hasWeights || !gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)])
 								break;
 
-							// TODO Export WIndex
+							// Sort the Weights according to their influence
+							// Get the first X of those weights and write it (X specified in options)
+							// Popluate Weights for this face
+							uint32_t offset = jointCount * vertexIterator.vertId();
+							std::multimap<double, uint32_t, std::greater<double>> orderedWeights;
+							for(uint32_t i = 0; i < jointCount; i++)
+							{
+								orderedWeights.insert(std::make_pair(boneWeights[offset + i], i));
+							}
+							
+							std::vector<double> weights;
+							std::vector<uint32_t> weightIndices;
+							auto iterator = orderedWeights.begin();
+							for(uint32_t i = 0; i < gfgOptions.influence; i++)
+							{
+								if(i >= orderedWeights.size())
+								{
+									// Write Empty
+									weights.push_back(0.0);
+									weightIndices.push_back(0);
+								}
+								else
+								{
+									weights.push_back(iterator->first);
+									auto loc = skeletonIndexLookup.find(iterator->second);
+									if(loc != skeletonIndexLookup.end())
+										weightIndices.push_back(loc->second);
+									else
+										weightIndices.push_back(0);
+									iterator++;
+								}
+							}
+
+							if(ElementIndexToComponent(eIndex) == GFGMayaOptionsIndex::WEIGHT)
+							{
+								if(!hasWeights || !gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)])
+									break;
+
+								////DEBUG
+								//cout << "Writing Weighs" << endl;
+								//for(unsigned int aa = 0; aa < weights.size(); aa++)
+								//{
+								//	cout << "\t" << weights[aa] << endl;
+								//}
+								//cout << endl;
+
+								WriteWeight(vertexData, weights.data(), weightIndices.data());
+							}
+							else if(ElementIndexToComponent(eIndex) == GFGMayaOptionsIndex::WEIGHT_INDEX)
+							{
+								if(!hasWeights || !gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)])
+									break;
+
+								WriteWeightIndex(vertexData, weights.data(), weightIndices.data());
+							}
 							break;
 						}
 						case GFGMayaOptionsIndex::COLOR:
@@ -1625,16 +2167,23 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 								break;
 
 							int index;
-							mIt.getColorIndex(i, index);
-							WriteColor(vertexData, colors[std::max(index, 0)]);
+							vertexIterator.getColorIndex(index);
+							if(!WriteColor(vertexData, colors[std::max(index, 0)])) return MStatus::kFailure;
 							break;
 						}
 					}
-				}	
+				}
 			}
+
 			// We already have this vertex
 			// Add it to the array of that material
-			std::vector<uint8_t>& currMatIndexArray = materialIndexData[polyMatIndices[mIt.index()]];
+			int materialIndex = polyMatIndices[mIt.index()];
+			if(materialIndex == -1)
+			{
+				// Fallback to whatever material is on index 0
+				materialIndex = 0;
+			}
+			std::vector<uint8_t>& currMatIndexArray = materialIndexData[materialIndex];
 
 			// Allocate Bytes
 			currMatIndexArray.insert(currMatIndexArray.end(), currentMeshHeader.indexSize, 0);
@@ -1766,27 +2315,39 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 			indexOffset += static_cast<uint32_t>(materialIndexData[j].size() / currentMeshHeader.indexSize);
 		}
 
-		GFGMeshMatPair m
+		GFGMeshMatPair matPair
 		{
 			0,																			// Will be filled by Add Mesh Func
 			gfgOptions.matOn ? usedMaterialIDs[i] : -1,									// Material ID
 			indexOffset,
 			static_cast<uint32_t>(materialIndex.size() / currentMeshHeader.indexSize)	// Amount of index
 		};
-		materialPairings.emplace_back(m);
+		materialPairings.emplace_back(matPair);
 		i++;
 	}
 
 	// Get Skeleton Pairings
 	std::vector<GFGMeshSkelPair> skeletonPairings;
-	for(unsigned int i = 0; i < skClusters.length(); i++)
+	if(referencedSkeleton != -1 &&
+	   skeletonExport[referencedSkeleton] &&
+	   hasWeights &&
+	   gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)] &&
+	   gfgOptions.onOff[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)])
 	{
-		GFGMeshSkelPair p
+		// Find the exported index
+		uint32_t actualId = -1;
+		for(unsigned int i = 0; i <= referencedSkeleton; i++)
+		{ 
+			if(skeletonExport[i])
+				actualId++;
+		}
+
+		GFGMeshSkelPair skelPair
 		{
-			0,		// Will be filled by Add Mesh Func
-			99		// TODO skeleton should be exported like material implement export skeleton
+			0,					// Will be filled by Add Mesh Func
+			actualId
 		};
-		skeletonPairings.emplace_back(p);
+		skeletonPairings.emplace_back(skelPair);
 	}
 	
 	// Write it
@@ -1799,7 +2360,9 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 							vertexDataConcat,
 							&indexDataConcat,
 							&materialPairings,
-							(gfgOptions.skelOn && hasWeights) ? &skeletonPairings : nullptr);
+							(gfgOptions.skelOn && 
+							 hasWeights && 
+							 skeletonPairings.size() > 0) ? &skeletonPairings : nullptr);
 	}
 	else
 	{
@@ -1809,7 +2372,9 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 							vertexDataConcat,
 							&indexDataConcat,
 							&materialPairings,
-							(gfgOptions.skelOn && hasWeights) ? &skeletonPairings : nullptr);
+							(gfgOptions.skelOn &&
+							 hasWeights &&
+							 skeletonPairings.size() > 0) ? &skeletonPairings : nullptr);
 	}
 	hierarcyNames.push_back(p);
 	//hierarchy.push_back(GFGNode {parentIndex, transformIndex, -1});
@@ -1881,9 +2446,19 @@ MStatus GFGTranslator::GetReferencedMaterials(MObjectArray& materials, MIntArray
 		MFnDependencyNode shadingEngine(shadingEngines[i]);
 		shaderReference = shadingEngine.findPlug("surfaceShader");
 		shaderReference.connectedTo(materialReferences, true, false);
-		actualMaterial = materialReferences[0].node();
 
-		materials.append(actualMaterial);
+		if(materialReferences.length() != 0)
+		{
+			actualMaterial = materialReferences[0].node();
+			materials.append(actualMaterial);
+		}
+		else
+		{
+			// Material Probably Deleted however depGraph holds the Shading engine node
+			// A.k.a user deleted shader from hypershade and some(all) polygons are green
+			// Here Fallback to lambert since you cant delete lambert
+			materials.append(lambert1);
+		}
 	}
 	return MS::kSuccess;
 }
@@ -1935,19 +2510,185 @@ MStatus GFGTranslator::WriteReferencedMaterials(std::vector<uint32_t>& materialI
 	return MS::kSuccess;
 }
 
-MStatus GFGTranslator::ExportSkeleton(const MDagPath&)
+MStatus GFGTranslator::ExportSkeleton(const MDagPath& root, bool inSelectionList)
 {
-	// This dag path is guaranteed to be the skeleton's root
+	// Root Check
+	if(root.length() == 0)
+	{
+		cout << "Skipping world root node." << endl;
+		return MStatus::kFailure;
+	}
+
+	MDagPath rootCpy(root);
+	MFnDagNode dagNode(root.node());
+	while(rootCpy.pop() == MStatus::kSuccess)
+	{
+		//cout << "On Node : " << rootCpy.fullPathName() << endl;
+		if(rootCpy.hasFn(MFn::kJoint))
+		{
+			//cout << "Not Parent Joint!" << endl;
+			return MStatus::kFailure;
+		}
+	}
+
+	// Some things to consider	
+	// User may have other DagNodes in between joints 
+	// (groups etc.)
+	// Assume those as joints aswell (bind pose will not fuck up then)
+	// Clean proper maya user should not have stuff in between joints, however we need to consider it for
+	
+	// GFG Does not have Joint Orient Transform since its a convinience in maya to have proper object translations
+	// Bake the Joint Orient to the bind pose
+	
+	// Other than that it should be ok
+	MItDag::TraversalType type;
+	switch(gfgOptions.boneTraverse)
+	{
+		case GFGMayaTraversal::BFS_ALPHABETICAL:
+		case GFGMayaTraversal::BFS_DEFAULT:
+		{
+			type = MItDag::kBreadthFirst;
+			break;
+		}
+		case GFGMayaTraversal::DFS_ALPHABETICAL:
+		case GFGMayaTraversal::DFS_DEFAULT:
+		{
+			type = MItDag::kDepthFirst;
+			break;
+		}
+	}
+
+	// Now Actual Export
+	std::vector<uint32_t> parentIndices;
+	std::vector<GFGTransform> currenSkelTransforms;
+
+	skeletons.emplace_back();
+	MObjectArray& skelList = skeletons.back();
 
 
-	// Errors
+	auto WriteParentAndTransform = [&] (MDagPath& parentPath, MObject& currentNode)
+	{
+		// DEBUG
+		//MFnDagNode curr(currentNode);
+		//cout << "On Node : " << curr.name() << endl;
 
-	// Error on mid way objects(transforms) between joints
+		// Parent Index & Transform
+		uint32_t parentIndex = -1;
+		// Find Parent Index
+		for(unsigned int i = 0; i < skelList.length(); i++)
+		{
+			MFnDagNode node(skelList[i]);
+			if(parentPath.partialPathName() == node.name())
+			{
+				parentIndex = i;
+			}
+		}
+		parentIndices.push_back(parentIndex);
+
+		GFGTransform transform
+		{
+			{0.0f, 0.0f, 0.0f},
+			{ 0.0f, 0.0f, 0.0f},
+			{ 1.0f, 1.0f, 1.0f},
+		};
+		if(parentIndex == -1)
+			BakeTransform(transform, root);	// Add Root Skeleton's parents transformations also
+		else
+			// Root May Have Parents which may contribute to the initial transform of this node
+			MayaToGFG::Transform(transform, currentNode);
+		currenSkelTransforms.push_back(transform);
+	};
+
+	if(gfgOptions.boneTraverse == GFGMayaTraversal::BFS_DEFAULT ||
+	   gfgOptions.boneTraverse == GFGMayaTraversal::DFS_DEFAULT)
+	{
+		MItDag iterator(type);
+		iterator.reset(root, type);
+		for(; !iterator.isDone();
+			iterator.next())
+		{
+			MDagPath parentPath;
+			iterator.getPath(parentPath);
+			parentPath.pop();
+
+			skelList.append(iterator.currentItem());
+			WriteParentAndTransform(parentPath, iterator.currentItem());
+		}
+	}
+	else if(gfgOptions.boneTraverse == GFGMayaTraversal::BFS_ALPHABETICAL)
+	{
+		GFGMayaAlphabeticalBFSIterator iterator(root);
+		for(; !iterator.IsDone();
+			iterator.Next())
+		{
+			MDagPath parentPath = iterator.CurrentPath();
+			parentPath.pop();
+
+			skelList.append(iterator.CurrentPath().node());
+			WriteParentAndTransform(parentPath, iterator.CurrentPath().node());
+		}
+	}
+	else if(gfgOptions.boneTraverse == GFGMayaTraversal::DFS_ALPHABETICAL)
+	{
+		GFGMayaAlphabeticalDFSIterator iterator(root);
+		for(; !iterator.IsDone();
+			iterator.Next())
+		{
+			MDagPath parentPath = iterator.CurrentPath();
+			parentPath.pop();
+
+			skelList.append(iterator.CurrentPath().node());
+			WriteParentAndTransform(parentPath, iterator.CurrentPath().node());
+		}
+	}
+	skeletonExport.push_back(inSelectionList);
+
+	// Send to File
+	if(gfgOptions.skelOn &&
+	   inSelectionList)
+		gfgExporter.AddSkeleton(parentIndices, currenSkelTransforms);
 
 	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WritePosition(std::vector<std::vector<uint8_t>>& meshData, const double position[3]) const
+MStatus GFGTranslator::ExportAnimationOnSkeleton(const MDagPath& skeletonRootBone)
+{
+	assert(false);
+	return MStatus::kFailure;
+}
+
+MStatus GFGTranslator::BakeTransform(GFGTransform& transform, const MDagPath& node)
+{
+	// We have a parent that will not be exported
+	// We need to bake its parents transform (and its parents... untill root)
+	MDagPath parentPath = node;
+	MMatrix worldMatrix = MMatrix::identity;
+	while(parentPath.length() > 0)
+	{
+		if(parentPath.hasFn(MFn::kTransform))
+		{
+			MFnTransform transformParent(parentPath);
+
+			worldMatrix *= transformParent.transformationMatrix();
+
+			GFGTransform transformGFGParent;
+			MayaToGFG::Transform(transformGFGParent, parentPath.node());
+			for(int a = 0; a < 3; a++)
+			{
+				transform.rotate[a] += transformGFGParent.rotate[a];
+				transform.scale[a] *= transformGFGParent.scale[a];
+			}
+		}
+		parentPath.pop();
+	}
+
+	transform.translate[0] = static_cast<float>(worldMatrix(3, 0));
+	transform.translate[1] = static_cast<float>(worldMatrix(3, 1));
+	transform.translate[2] = static_cast<float>(worldMatrix(3, 2));
+	return MStatus::kSuccess;
+}
+
+MStatus GFGTranslator::WritePosition(std::vector<std::vector<uint8_t>>& meshData, const double position[3]) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& positionGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::POSITION)]);
@@ -1963,13 +2704,15 @@ void GFGTranslator::WritePosition(std::vector<std::vector<uint8_t>>& meshData, c
 								 gfgOptions.dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::POSITION)]))
 	{ 
 		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WriteNormal(std::vector<std::vector<uint8_t>>& meshData, 
-								const double normal[3], 
-								const double tangent[3], 
-								const double binormal[3]) const
+MStatus GFGTranslator::WriteNormal(std::vector<std::vector<uint8_t>>& meshData,
+								   const double normal[3],
+								   const double tangent[3],
+								   const double binormal[3]) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& normalGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::NORMAL)]);
@@ -1986,11 +2729,13 @@ void GFGTranslator::WriteNormal(std::vector<std::vector<uint8_t>>& meshData,
 		tangent,
 		binormal))
 	{
-		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		cout << "Fatal Error! Cannot Write normal with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WriteUV(std::vector<std::vector<uint8_t>>& meshData, const double uv[2]) const
+MStatus GFGTranslator::WriteUV(std::vector<std::vector<uint8_t>>& meshData, const double uv[2]) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& uvGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::UV)]);
@@ -2005,11 +2750,13 @@ void GFGTranslator::WriteUV(std::vector<std::vector<uint8_t>>& meshData, const d
 		uv,
 		gfgOptions.dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::UV)]))
 	{
-		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		cout << "Fatal Error! Cannot Write uv with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WriteTangent(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const
+MStatus GFGTranslator::WriteTangent(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& tangentGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::TANGENT)]);
@@ -2026,11 +2773,13 @@ void GFGTranslator::WriteTangent(std::vector<std::vector<uint8_t>>& meshData, co
 		normal,
 		binormal))
 	{
-		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		cout << "Fatal Error! Cannot Write tangent with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WriteBinormal(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const
+MStatus GFGTranslator::WriteBinormal(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& binormalGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::BINORMAL)]);
@@ -2047,11 +2796,13 @@ void GFGTranslator::WriteBinormal(std::vector<std::vector<uint8_t>>& meshData, c
 		tangent,
 		normal))
 	{
-		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		cout << "Fatal Error! Cannot Write binormal with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WriteWeight(std::vector<std::vector<uint8_t>>& meshData, int vLocalIndex, const double* weights, const unsigned int* wIndex) const
+MStatus GFGTranslator::WriteWeight(std::vector<std::vector<uint8_t>>& meshData, const double* weights, const unsigned int* wIndex) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& weightGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)]);
@@ -2064,15 +2815,16 @@ void GFGTranslator::WriteWeight(std::vector<std::vector<uint8_t>>& meshData, int
 	if(!GFGWeight::ConvertData(&*(weightGroup.end() - weightSize),
 		weightSize,
 		weights,
-		wIndex,
 		gfgOptions.influence,
 		gfgOptions.dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)]))
 	{
-		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		cout << "Fatal Error! Cannot Write weight with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WriteWeightIndex(std::vector<std::vector<uint8_t>>& meshData, int vLocalIndex, const double* weights, const unsigned int* wIndex) const
+MStatus GFGTranslator::WriteWeightIndex(std::vector<std::vector<uint8_t>>& meshData, const double* weights, const unsigned int* wIndex) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& weightIGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)]);
@@ -2084,16 +2836,17 @@ void GFGTranslator::WriteWeightIndex(std::vector<std::vector<uint8_t>>& meshData
 	//  Write
 	if(!GFGWeightIndex::ConvertData(&*(weightIGroup.end() - weightISize),
 		weightISize,
-		weights,
 		wIndex,
 		gfgOptions.influence,
 		gfgOptions.dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)]))
 	{
-		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		cout << "Fatal Error! Cannot Write weight index with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
-void GFGTranslator::WriteColor(std::vector<std::vector<uint8_t>>& meshData, const MColor& color) const
+MStatus GFGTranslator::WriteColor(std::vector<std::vector<uint8_t>>& meshData, const MColor& color) const
 {
 	// We append enough bytes to aprropirate group and convert it according to the
 	std::vector<uint8_t>& colorGroup = meshData.at(gfgOptions.layout[static_cast<uint32_t>(GFGMayaOptionsIndex::COLOR)]);
@@ -2113,8 +2866,10 @@ void GFGTranslator::WriteColor(std::vector<std::vector<uint8_t>>& meshData, cons
 		colorArray,
 		gfgOptions.dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::COLOR)]))
 	{
-		cout << "Fatal Error! Cannot Write position with specified dataType" << endl;
+		cout << "Fatal Error! Cannot Write color with specified dataType" << endl;
+		return MStatus::kFailure;
 	}
+	return MStatus::kSuccess;
 }
 
 void GFGTranslator::PrintOptStruct() const 
@@ -2315,6 +3070,26 @@ void GFGTranslator::PrintAllGFGBlocks(const GFGHeader& header) const
 	cout << endl;
 	cout << "*********************" << endl;
 	cout << endl;
+	cout << "Printing Skeletons" << endl;
+	no = 0;
+	for(const GFGSkeletonHeader& skel : header.skeletons)
+	{
+		cout << "Mesh #" << no << endl;
+		int bNo = 0;
+		for(const GFGBone& bone : skel.bones)
+		{
+			cout << "\tBone #" << bNo << endl;
+			cout << "\tParent: " << static_cast<uint32_t>(bone.parentIndex) << endl;
+			cout << "\tTransform: " << static_cast<uint32_t>(bone.transformIndex) << endl;
+			cout << endl;
+			bNo++;
+		}
+		cout << "---------------------" << endl;
+		no++;
+	}
+	cout << endl;
+	cout << "*********************" << endl;
+	cout << endl;
 	cout << "Printing Mesh Mat Pairs" << endl;
 	cout << endl;
 	no = 0;
@@ -2335,13 +3110,16 @@ void GFGTranslator::PrintAllGFGBlocks(const GFGHeader& header) const
 	no = 0;
 	for(const GFGMeshSkelPair& mmPair : header.meshSkeletonConnections.connections)
 	{
-		cout << "MM Pair #" << no << endl;
+		cout << "MS Pair #" << no << endl;
 		cout << "Mesh ID: " << mmPair.meshIndex << endl;
 		cout << "Skel ID: " << mmPair.skeletonIndex << endl;
 		cout << "---------------------" << endl;
 		no++;
 	}
 	cout << "*********************" << endl;
+	cout << endl;
+	cout << "Printing Node Transforms" << endl;
+	cout << endl;
 	cout << "Transform Count : " << header.transformData.transformAmount << endl;
 	for(const GFGTransform& trans : header.transformData.transforms)
 	{
@@ -2351,6 +3129,9 @@ void GFGTranslator::PrintAllGFGBlocks(const GFGHeader& header) const
 		cout << "---------------------" << endl;
 	}
 	cout << "*********************" << endl;
+	cout << endl;
+	cout << "Printing Skeleton Transforms" << endl;
+	cout << endl;
 	cout << "Skel Transform Count : " << header.bonetransformData.transformAmount << endl;
 	for(const GFGTransform& trans : header.bonetransformData.transforms)
 	{
@@ -2443,6 +3224,9 @@ MStatus GFGTranslator::writer(const MFileObject& file,
 	cout << "http://yalcinerbora.github.io/GFG/" << endl;
 
 	ResetForExport();
+	FindLambert1();		// Find lambert1 every export 
+						// just in case maya resets lambert1 reference 
+						// when user clears the scene
 
 	// GFG File Writing
 	std::ofstream fileExport;

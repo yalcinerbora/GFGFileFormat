@@ -27,7 +27,8 @@
 *.out
 *.app
 
-# Windows Intellisense Database
+# Windows Intellisense Database and 
+# Solution User Datafile
 *.sdf
 *.opensdf
 *.suo

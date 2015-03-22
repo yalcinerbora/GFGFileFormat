@@ -1,5 +1,5 @@
 global proc string GFGReDeploy (string $type)
- {
+{
 	string $gfgOptsDest = "C:/Program Files/Autodesk/Maya2015/scripts/others/GFGOpts.mel";
 	string $gfgOptsSrc = "D:/GitHub/GFGFileFormat/Source/Autodesk Maya/GFGOpts.mel";
 	

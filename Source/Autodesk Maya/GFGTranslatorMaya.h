@@ -22,6 +22,8 @@ https://github.com/yalcinerbora/GFGFileFormat/blob/master/LICENSE
 #include "GFGMayaStructures.h"
 #include "GFGMayaOptions.h"
 
+using GFGMayaIndexLookup = std::vector<std::map<uint32_t, uint32_t>>;
+
 class GFGTranslator : public MPxFileTranslator
 {
 	private:
@@ -54,8 +56,11 @@ class GFGTranslator : public MPxFileTranslator
 		MObject					FindDAG(MString& name);
 		bool					ImportMesh(MObject& meshTransform,
 										   MDGModifier& commandList,
+										   const GFGTransform& transform,
 										   const MString& meshName,
 										   uint32_t meshIndex);
+		bool					ImportSkeleton(const MString& skeletonName,
+												uint32_t skeletonIndex);
 
 		// Maya Utility
 		void					ResetForExport();
@@ -63,24 +68,27 @@ class GFGTranslator : public MPxFileTranslator
 		bool					IsRequiredTransform(const MDagPath&) const;
 		MStatus					NormalizeSelectionList(MSelectionList&) const;
 		GFGMayaOptionsIndex		ElementIndexToComponent(unsigned int) const;	// Traverse Components in order
+		void					FindLambert1();
 
 		// Exporting Func
 		MStatus					ExportMesh(const GFGTransform& transform, const MDagPath&, uint32_t parentIndex);
 		MStatus					GetSkData(MObjectArray& skClusters, const MDagPath& objPath);
 		MStatus					GetReferencedMaterials(MObjectArray& materials, MIntArray& indices, unsigned int instanceNo, const MFnMesh& mesh) const;
 		MStatus					WriteReferencedMaterials(std::vector<uint32_t>& materialIndexGFG, const MObjectArray& materials);
-		MStatus					ExportSkeleton(const MDagPath& skeletonRootBone);
+		MStatus					ExportSkeleton(const MDagPath& skeletonRootBone, bool inSelectionList);
 		MStatus					ExportAnimationOnSkeleton(const MDagPath& skeletonRootBone);
+		MStatus					BakeTransform(GFGTransform& transform, const MDagPath& node);
+		static MStatus			WeightExportCommon();
 
 		// Export Mesh Data Writes
-		void					WritePosition(std::vector<std::vector<uint8_t>>& meshData, const double position[3]) const;
-		void					WriteNormal(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const;
-		void					WriteUV(std::vector<std::vector<uint8_t>>& meshData, const double uv[2]) const;
-		void					WriteTangent(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const;
-		void					WriteBinormal(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const;
-		void					WriteWeight(std::vector<std::vector<uint8_t>>& meshData, int vLocalIndex, const double* weights, const unsigned int* wIndex) const;
-		void					WriteWeightIndex(std::vector<std::vector<uint8_t>>& meshData, int vLocalIndex, const double* weights, const unsigned int* wIndex) const;
-		void					WriteColor(std::vector<std::vector<uint8_t>>& meshData, const MColor& color) const;
+		MStatus					WritePosition(std::vector<std::vector<uint8_t>>& meshData, const double position[3]) const;
+		MStatus					WriteNormal(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const;
+		MStatus					WriteUV(std::vector<std::vector<uint8_t>>& meshData, const double uv[2]) const;
+		MStatus					WriteTangent(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const;
+		MStatus					WriteBinormal(std::vector<std::vector<uint8_t>>& meshData, const double normal[3], const double tangent[3], const double binormal[3]) const;
+		MStatus					WriteWeight(std::vector<std::vector<uint8_t>>& meshData, const double* weights, const unsigned int* wIndex) const;
+		MStatus					WriteWeightIndex(std::vector<std::vector<uint8_t>>& meshData, const double* weights, const unsigned int* wIndex) const;
+		MStatus					WriteColor(std::vector<std::vector<uint8_t>>& meshData, const MColor& color) const;
 
 		// Debugging
 		void					PrintOptStruct() const;
@@ -92,17 +100,22 @@ class GFGTranslator : public MPxFileTranslator
 		void					PrintAllGFGBlocks(const GFGHeader& header) const;
 
 		// Properties
-		MString					errorList;
+		MString							errorList;
 
 		// Export Related
-		GFGFileExporter			gfgExporter;
-		GFGMayaOptions			gfgOptions;
-		std::vector<MString>	mayaMaterialNames;	// For avoiding material duplication
-		std::vector<MDagPath>	hierarcyNames;		// Lookup for parenting		
+		GFGFileExporter					gfgExporter;
+		GFGMayaOptions					gfgOptions;
+		std::vector<MString>			mayaMaterialNames;	// For avoiding material duplication
+		std::vector<MDagPath>			hierarcyNames;		// Lookup for parenting		
+		MObject							lambert1;			// Lambert1 Material used in non materialed mesh
+		std::vector<MObjectArray>		skeletons;			// Skeletons with names
+		std::vector<bool>				skeletonExport;
 
 		// Import Related
-		GFGFileLoader			gfgLoader;
-		MStringArray			referencedMaterials;
+		GFGFileLoader					gfgLoader;
+		MStringArray					referencedMaterials;
+		std::vector<MObjectArray>		importedSkeletons;
+		MObjectArray					importedMeshes;
 
 	protected:
 

@@ -16,7 +16,6 @@ and the GPU Memory. It can literally take one memcopy to put your vertex data to
 - Supports transform hierarchy (parent child meshes, transform nodes etc.)
 - Supports Basic Animation 
 - Supports Materials
-
 - GPU applicable data layout
 - User defined data layouts
 - Packing Vertex Components
