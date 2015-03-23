@@ -101,6 +101,7 @@ class GFGTranslator : public MPxFileTranslator
 
 		// Properties
 		MString							errorList;
+		bool							import;
 
 		// Export Related
 		GFGFileExporter					gfgExporter;
@@ -121,15 +122,18 @@ class GFGTranslator : public MPxFileTranslator
 
 	public:
 		// Stuff that plugin initialize asks
-		static const char*		pluginName;
-		static const char*		pluginOptionScriptName;
+		static const char*		pluginNameImport;
+		static const char*		pluginNameExport;
+		static const char*		pluginOptionImportScriptName;
+		static const char*		pluginOptionExportScriptName;
 		static const char*		pluginPixmapName;
 		static const char*		defaultOptions;
 
-		static void*			creator();
+		static void*			creatorExport();
+		static void*			creatorImport();
 
 		// Constructors & Destructor
-								GFGTranslator();
+								GFGTranslator(bool import);
 		virtual					~GFGTranslator() = default;
 
 		// Both import and export is supported

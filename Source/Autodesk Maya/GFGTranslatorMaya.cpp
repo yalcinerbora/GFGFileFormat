@@ -51,8 +51,10 @@ Author(s):
 #include "GFG/GFGVertexElementTypes.h"
 #include "GFGMayaGraphIterator.h"
 
-const char* GFGTranslator::pluginName = "GFG";
-const char* GFGTranslator::pluginOptionScriptName = "GFGOpts";
+const char* GFGTranslator::pluginNameImport = "GFG_import";
+const char* GFGTranslator::pluginNameExport = "GFG_export";
+const char* GFGTranslator::pluginOptionImportScriptName = "GFGOptsImport";
+const char*	GFGTranslator::pluginOptionExportScriptName = "GFGOptsExport";
 const char* GFGTranslator::pluginPixmapName = "none";
 
 // There are some limitations of the maya's file exporter options
@@ -841,29 +843,29 @@ bool GFGTranslator::ImportMesh(MObject& meshTransform,
 			hasWeightIndex &= (weightIndices.size() != 0);
 
 			// Print Weights
-			cout << "Weights of " << meshName << endl;
-			for(const MDoubleArray vertexWeights : weights)
-			{
-				for(unsigned int i = 0;
-					i < vertexWeights.length() && vertexWeights[i] != -1.0;
-					i++)
-				{
-					cout << vertexWeights[i] << " " << endl;
-				}
-				cout << endl;
-			}
-			cout << endl;
-			cout << "Weights Index of " << meshName << endl;
-			for(const MIntArray vertexWeightIndices : weightIndices)
-			{
-				for(unsigned int i = 0;
-					i < vertexWeightIndices.length() && vertexWeightIndices[i] != -1;
-					i++)
-				{
-					cout << vertexWeightIndices[i] << " " << endl;
-				}
-				cout << endl;
-			}
+			//cout << "Weights of " << meshName << endl;
+			//for(const MDoubleArray vertexWeights : weights)
+			//{
+			//	for(unsigned int i = 0;
+			//		i < vertexWeights.length() && vertexWeights[i] != -1.0;
+			//		i++)
+			//	{
+			//		cout << vertexWeights[i] << " " << endl;
+			//	}
+			//	cout << endl;
+			//}
+			//cout << endl;
+			//cout << "Weights Index of " << meshName << endl;
+			//for(const MIntArray vertexWeightIndices : weightIndices)
+			//{
+			//	for(unsigned int i = 0;
+			//		i < vertexWeightIndices.length() && vertexWeightIndices[i] != -1;
+			//		i++)
+			//	{
+			//		cout << vertexWeightIndices[i] << " " << endl;
+			//	}
+			//	cout << endl;
+			//}
 
 			if(hasWeight ||
 			   hasWeightIndex)
@@ -3142,22 +3144,28 @@ void GFGTranslator::PrintAllGFGBlocks(const GFGHeader& header) const
 	}
 }
 
-void* GFGTranslator::creator()
+void* GFGTranslator::creatorImport()
 {
-	return new GFGTranslator();
+	return new GFGTranslator(true);
 }
 
-GFGTranslator::GFGTranslator()
+void* GFGTranslator::creatorExport()
+{
+	return new GFGTranslator(false);
+}
+
+GFGTranslator::GFGTranslator(bool import)
+	: import(import)
 {}
 
 bool GFGTranslator::haveReadMethod() const
 {
-	return true;
+	return import;
 }
 
 bool GFGTranslator::haveWriteMethod() const
 {
-	return true;
+	return !import;
 }
 
 bool GFGTranslator::haveReferenceMethod() const
@@ -3197,6 +3205,11 @@ MStatus GFGTranslator::reader(const MFileObject& file,
 		errorList += "FatalError: Options Parsing Failed.;";
 		return MS::kFailure;
 	}
+
+	//DEBUG
+	//cout << "Printing Options which will be used..." << endl;
+	PrintOptStruct();
+	//DEBUG_END
 
 	// Check Export Mode
 	if(mode == MPxFileTranslator::kImportAccessMode)
@@ -3258,7 +3271,7 @@ MStatus GFGTranslator::writer(const MFileObject& file,
 
 	//DEBUG
 	//cout << "Printing Options which will be used..." << endl;
-	//PrintOptStruct();
+	PrintOptStruct();
 	//DEBUG_END
 
 	// Add Root Node
@@ -3316,12 +3329,12 @@ MPxFileTranslator::MFileKind GFGTranslator::identifyFile(const MFileObject& file
 MStatus initializePlugin( MObject obj )
 {
     MStatus   status;
-    MFnPlugin plugin( obj, PLUGIN_COMPANY, "3.0", "Any");
+    MFnPlugin plugin( obj, PLUGIN_COMPANY, "v0.1", "Any");
 
-	status = plugin.registerFileTranslator(GFGTranslator::pluginName,
+	status = plugin.registerFileTranslator(GFGTranslator::pluginNameExport,
 										   GFGTranslator::pluginPixmapName,
-										   GFGTranslator::creator,
-										   GFGTranslator::pluginOptionScriptName,
+										   GFGTranslator::creatorExport,
+										   GFGTranslator::pluginOptionExportScriptName,
 										   GFGTranslator::defaultOptions,
 										   true);
     if (!status) 
@@ -3329,6 +3342,20 @@ MStatus initializePlugin( MObject obj )
         status.perror("registerFileTranslator");
         return status;
     }
+
+	status = plugin.registerFileTranslator(GFGTranslator::pluginNameImport,
+										   GFGTranslator::pluginPixmapName,
+										   GFGTranslator::creatorImport,
+										   GFGTranslator::pluginOptionImportScriptName,
+										   GFGTranslator::defaultOptions,
+										   true);
+
+	if(!status)
+	{
+		status.perror("registerFileTranslator");
+		return status;
+	}
+
     return status;
 }
 
@@ -3337,12 +3364,20 @@ MStatus uninitializePlugin( MObject obj )
     MStatus   status;
     MFnPlugin plugin( obj );
 
-	status = plugin.deregisterFileTranslator(GFGTranslator::pluginName);
+	// TODO: Check if we should delete the object created by "creator" functions
+	status = plugin.deregisterFileTranslator(GFGTranslator::pluginNameExport);
     if (!status)
     {
         status.perror("deregisterFileTranslator");
         return status;
     }
+
+	status = plugin.deregisterFileTranslator(GFGTranslator::pluginNameImport);
+	if(!status)
+	{
+		status.perror("deregisterFileTranslator");
+		return status;
+	}
 
     return status;
 }

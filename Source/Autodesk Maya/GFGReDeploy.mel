@@ -1,7 +1,10 @@
 global proc string GFGReDeploy (string $type)
 {
-	string $gfgOptsDest = "C:/Program Files/Autodesk/Maya2015/scripts/others/GFGOpts.mel";
-	string $gfgOptsSrc = "D:/GitHub/GFGFileFormat/Source/Autodesk Maya/GFGOpts.mel";
+	string $gfgOptsIDest = "C:/Program Files/Autodesk/Maya2015/scripts/others/GFGOptsImport.mel";
+	string $gfgOptsISrc = "D:/GitHub/GFGFileFormat/Source/Autodesk Maya/GFGOptsImport.mel";
+	
+	string $gfgOptsEDest = "C:/Program Files/Autodesk/Maya2015/scripts/others/GFGOptsExport.mel";
+	string $gfgOptsESrc = "C:/Program Files/Autodesk/Maya2015/scripts/others/GFGOptsExport.mel";
 	
 	string $gfgReDeployDest = "C:/Program Files/Autodesk/Maya2015/scripts/others/GFGReDeploy.mel";
 	string $gfgReDeploySrc = "D:/GitHub/GFGFileFormat/Source/Autodesk Maya/GFGReDeploy.mel";
@@ -9,10 +12,12 @@ global proc string GFGReDeploy (string $type)
 	string $gfgErrWindowDest = "C:/Program Files/Autodesk/Maya2015/scripts/others/GFGErrorWindow.mel";
 	string $gfgErrWindowSrc = "D:/GitHub/GFGFileFormat/Source/Autodesk Maya/GFGErrorWindow.mel";
 
-	sysFile -copy $gfgOptsDest $gfgOptsSrc;
+	sysFile -copy $gfgOptsEDest $gfgOptsESrc;
+	sysFile -copy $gfgOptsIDest $gfgOptsISrc;
 	sysFile -copy $gfgErrWindowDest $gfgErrWindowSrc;
 	sysFile -copy $gfgReDeployDest $gfgReDeploySrc;
-	source "GFGOpts.mel";
+	source "GFGOptsImport.mel";
+	source "GFGOptsExport.mel";
 	source "GFGErrorWindow.mel";
 	source "GFGReDeploy.mel";
  

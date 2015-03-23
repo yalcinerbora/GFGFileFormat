@@ -134,10 +134,12 @@ global proc GFGAdjustSlider(int $value, int $orderingValues[], int $pos, string 
 	text -e -l ("Current Ordering: " +  GFGPackGroupLayout($orderingValues)) $orderingText;
 }
 
-global proc int GFGOpts ( string $parent,
-						  string $action,
-						  string $initialSettings,
-						  string $resultCallback )
+
+// Entry point
+global proc int GFGOptsExport ( string $parent,
+								string $action,
+								string $initialSettings,
+								string $resultCallback )
 //
 //	Description:
 //		This script posts the GFG file translator options.
@@ -163,6 +165,12 @@ global proc int GFGOpts ( string $parent,
 //		0 otherwise.
 //
 {
+	// We need to diferentiate the status
+	// Are we exporting or importing
+	// Out best bet is parent layout
+
+
+
 	// GFG Export Data Types
 	string $gfgDataTypes[];
 	$gfgDataTypes[0] = "HALF_1";
@@ -316,6 +324,7 @@ global proc int GFGOpts ( string $parent,
 		text -l $headerSting;
 		text -l "For more information visit";
 		text -hl true -l "http://yalcinerbora.github.io/GFG/";
+		
 		separator -style "none" -h 10;
 		// Vertex Export
 		frameLayout -label "Vertex Component Export" -collapsable false -borderStyle "etchedIn"; 

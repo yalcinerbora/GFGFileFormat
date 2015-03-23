@@ -45,7 +45,6 @@ Installation Instructions can be found in this link [Installation Guide][6]
 
 - Implement Animation Export (Only Supports Material, Mesh and Skeleton at the moment)
 - Add Vertex Morph Target Animation Support
-- Import Option list on the Maya is same as export option list. (Import options should be different but couldn't find how to differentiate import from export in the mel script)
 - UE4 Importer
 - Porting to Linux (to GCC), and Linux Version of Maya
 - GFG File opener GUI program

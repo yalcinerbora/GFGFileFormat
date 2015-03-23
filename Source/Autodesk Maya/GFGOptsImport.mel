@@ -1,0 +1,317 @@
+// Entry point
+global proc int GFGOptsImport ( string $parent,
+								string $action,
+								string $initialSettings,
+								string $resultCallback )
+//
+//	Description:
+//		This script posts the GFG file translator options.
+//		The optionsString is of the form:
+//			varName1=value1;varName2=value2;...
+//
+//	Parameters:
+//		$parent	- the elf parent layout for this options layout. It is
+//					always a scrollLayout.
+//		$action	- the action that is to be performed with this invokation
+//					of this proc. Valid options are:
+//						"query" - construct the options string and pass it
+//									to the resultCallback.
+//						"post"	- post all the elf controls.
+//		$initialSettings - the current options string in effect at the
+//						   time this script is invoked.
+//		$resultCallback	-
+//				This is the proc to be called with the result string. 
+//				resultCallback ( string $optionsString )
+//
+//	Returns:
+//		1 if successfull.
+//		0 otherwise.
+//
+{
+	// We need to diferentiate the status
+	// Are we exporting or importing
+	// Out best bet is parent layout
+	
+	string $headerSting = "\"GPU Friendly Graphics\" File Format Importer";
+	
+	// Option Saver
+	string $currentOptions;
+	
+	// Layout Stuff
+	int	$frameLayoutWidth = 490;
+	int $checkBoxLeftPad = 175;
+	int $comboBoxLeftPad = 125;
+	
+	int $groupingOrderTexWidth = 90;
+	int $groupingOrderSliderWidth = 400;
+	
+	int	$index;
+	int	$bResult = 1;
+	
+	// Sow Options
+	if ($action == "post") 
+	{
+		setParent $parent;
+
+		columnLayout -adjustableColumn true;
+		text -l $headerSting;
+		text -l "For more information visit";
+		text -hl true -l "http://yalcinerbora.github.io/GFG/";
+		
+		separator -style "none" -h 10;
+		// Vertex Export
+		frameLayout -label "Vertex Component Export" -collapsable false -borderStyle "etchedIn"; 
+			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
+				checkBox -label ("Import Normals") normOn;
+				checkBox -label ("Import UVs") uvOn;
+				checkBox -label ("Import Tangents") tangOn;
+				checkBox -label ("Import Binormals") binormOn;
+				checkBox -label ("Import Weights") weightOn;
+				checkBox -label ("Import Color") colorOn;
+			setParent ..;
+		setParent ..;
+		// Materials
+		frameLayout -label "Material Import" -collapsable true -borderStyle "etchedIn"; 
+			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
+				checkBox -label ("Import Materials") matOn;
+			setParent ..;
+		setParent ..;
+		// Skeleton
+		frameLayout -label "Skeleton Import" -collapsable true -borderStyle "etchedIn"; 
+			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
+				checkBox -label ("Import Skeleton") skelOn;
+			setParent ..;
+		setParent ..;
+		// Hierarchy
+		frameLayout -label "Hierarchy Import" -collapsable true -borderStyle "etchedIn"; 
+			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
+				checkBox -label ("Import Hierarchy") hierOn;
+			setParent ..;
+		setParent ..;
+		// Index
+		
+		// All Done Finally Now Populate
+		// Default Write Options
+		string $optionList[];
+		string $optionBreakDown[];
+	
+		$currentOptions = $initialSettings;
+		
+		if (size($currentOptions) > 0) 
+		{
+			// Split from;
+			tokenize($currentOptions, ";", $optionList);
+			for ($index = 0; $index < size($optionList); $index++) 
+			{
+				tokenize($optionList[$index], "=", $optionBreakDown);
+				
+				// Import Normals
+				if ($optionBreakDown[0] == "normOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false normOn;
+					} 
+					else 
+					{
+						checkBox -e -v true normOn;
+					}
+				} 
+				// Import UVs
+				else if ($optionBreakDown[0] == "uvOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false uvOn;
+					} 
+					else 
+					{
+						checkBox -e -v true uvOn;
+					}
+				}
+				// Import Tangents
+				else if ($optionBreakDown[0] == "tangOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false tangOn;
+					} 
+					else 
+					{
+						checkBox -e -v true tangOn;
+					}
+				}
+				// Import Binormals
+				else if ($optionBreakDown[0] == "binormOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false binormOn;
+					} 
+					else 
+					{
+						checkBox -e -v true binormOn;
+					}
+				}
+				// Import Weights
+				else if ($optionBreakDown[0] == "weightOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false weightOn;
+					} 
+					else 
+					{
+						checkBox -e -v true weightOn;
+					}
+				}
+				// Import Colors
+				else if ($optionBreakDown[0] == "colorOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false colorOn;
+					} 
+					else 
+					{
+						checkBox -e -v true colorOn;
+					}
+				}
+				// Material Related
+				// Import Materials
+				else if ($optionBreakDown[0] == "matOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false matOn;
+					} 
+					else 
+					{
+						checkBox -e -v true matOn;
+					}
+				}
+				// Misc
+				// Import Hierarchy
+				else if ($optionBreakDown[0] == "hierOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false hierOn;
+					} 
+					else 
+					{
+						checkBox -e -v true hierOn;
+					}
+				}
+				// Import Skeletons
+				else if ($optionBreakDown[0] == "skelOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false skelOn;
+					} 
+					else 
+					{
+						checkBox -e -v true skelOn;
+					}
+				}
+			}
+		}
+		$bResult = 1;
+	} 
+	// Write Options
+	else if ($action == "query") 
+	{
+		// Normal Import
+		if (`checkBox -q -v normOn`)
+		{
+			$currentOptions = $currentOptions + "normOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + "normOn=0";
+		}
+		// UV Import
+		if (`checkBox -q -v uvOn`)
+		{
+			$currentOptions = $currentOptions + ";uvOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";uvOn=0";
+		}
+		// Tangent Import
+		if (`checkBox -q -v tangOn`)
+		{
+			$currentOptions = $currentOptions + ";tangOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";tangOn=0";
+		}
+		// Binormal Import
+		if (`checkBox -q -v binormOn`)
+		{
+			$currentOptions = $currentOptions + ";binormOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";binormOn=0";
+		}
+		// Weight Import
+		if (`checkBox -q -v weightOn`)
+		{
+			$currentOptions = $currentOptions + ";weightOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";weightOn=0";
+		}
+		// Color Import
+		if (`checkBox -q -v colorOn`)
+		{
+			$currentOptions = $currentOptions + ";colorOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";colorOn=0";
+		}
+		// Material Options
+		// Material Import
+		if (`checkBox -q -v matOn`)
+		{
+			$currentOptions = $currentOptions + ";matOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";matOn=0";
+		}
+		// Misc
+		// Hierarcy Import
+		if (`checkBox -q -v hierOn`)
+		{
+			$currentOptions = $currentOptions + ";hierOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";hierOn=0";
+		}
+		// Skeleton Import
+		if (`checkBox -q -v skelOn`)
+		{
+			$currentOptions = $currentOptions + ";skelOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";skelOn=0";
+		}
+		eval($resultCallback+" \""+$currentOptions+"\"");
+		$bResult = 1;
+	} 
+	else 
+	{
+		// Error
+		$bResult = 0;
+	}
+	return $bResult;
+}
