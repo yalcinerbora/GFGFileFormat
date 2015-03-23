@@ -2,6 +2,8 @@
 #include "half.hpp" 
 #include <cassert>
 
+static_assert(sizeof(half_float::half) == 2, "Half Size is not 16 bit");
+
 // Simple Utility Cross
 static auto GFGCrossProduct = [] (float out[3], const float a[3], const float b[3])
 {
@@ -20,9 +22,10 @@ uint16_t GFGConversions::FloatToHalf(float f)
 
 uint16_t GFGConversions::DoubleToHalf(double d)
 {
+
 	half_float::half result(static_cast<float>(d));
 	uint16_t out;
-	std::memcpy(&out, &result, sizeof(uint16_t));
+	std::memcpy(&out, &result, sizeof(half_float::half));
 	return out;
 }
 
@@ -371,10 +374,10 @@ void GFGConversions::UIntToUInt8_4_4(uint8_t dataOut[],
 void GFGConversions::DoubleToHalfV(uint8_t dataOut[], size_t dataCapacity, const double data[], size_t dataAmount)
 {
 	uint16_t temp;
-	assert(dataCapacity >= sizeof(uint16_t) * dataAmount);
+	assert(dataCapacity >= sizeof(half_float::half) * dataAmount);
 	for(int i = 0; i < dataAmount; i++)
 	{
-		temp = GFGConversions::DoubleToHalf(data[0]);
+		temp = GFGConversions::DoubleToHalf(data[i]);
 		std::memcpy(dataOut + i * sizeof(uint16_t), &temp, sizeof(uint16_t));
 	}
 }
@@ -528,7 +531,7 @@ void GFGConversions::HalfToDoubleV(double dataOut[], size_t dataCapacity, const 
 	{
 		half_float::half half;
 		std::memcpy(&half, dataIn + i * sizeof(half_float::half), sizeof(half_float::half));
-		dataOut[i] = static_cast<double>(half);
+		dataOut[i] = static_cast<double>(static_cast<float>(half));
 	}
 }
 
