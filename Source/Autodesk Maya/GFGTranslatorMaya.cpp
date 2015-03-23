@@ -840,30 +840,30 @@ bool GFGTranslator::ImportMesh(MObject& meshTransform,
 			}
 			hasWeightIndex &= (weightIndices.size() != 0);
 
-			//// Print Weights
-			//cout << "Weights of " << meshName << endl;
-			//for(const MDoubleArray vertexWeights : weights)
-			//{
-			//	for(unsigned int i = 0;
-			//		i < vertexWeights.length() && vertexWeights[i] != -1.0;
-			//		i++)
-			//	{
-			//		cout << vertexWeights[i] << " " << endl;
-			//	}
-			//	cout << endl;
-			//}
-			//cout << endl;
-			//cout << "Weights Index of " << meshName << endl;
-			//for(const MIntArray vertexWeightIndices : weightIndices)
-			//{
-			//	for(unsigned int i = 0;
-			//		i < vertexWeightIndices.length() && vertexWeightIndices[i] != -1;
-			//		i++)
-			//	{
-			//		cout << vertexWeightIndices[i] << " " << endl;
-			//	}
-			//	cout << endl;
-			//}
+			// Print Weights
+			cout << "Weights of " << meshName << endl;
+			for(const MDoubleArray vertexWeights : weights)
+			{
+				for(unsigned int i = 0;
+					i < vertexWeights.length() && vertexWeights[i] != -1.0;
+					i++)
+				{
+					cout << vertexWeights[i] << " " << endl;
+				}
+				cout << endl;
+			}
+			cout << endl;
+			cout << "Weights Index of " << meshName << endl;
+			for(const MIntArray vertexWeightIndices : weightIndices)
+			{
+				for(unsigned int i = 0;
+					i < vertexWeightIndices.length() && vertexWeightIndices[i] != -1;
+					i++)
+				{
+					cout << vertexWeightIndices[i] << " " << endl;
+				}
+				cout << endl;
+			}
 
 			if(hasWeight ||
 			   hasWeightIndex)
