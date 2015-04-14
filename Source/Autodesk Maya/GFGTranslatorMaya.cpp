@@ -1922,22 +1922,24 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 	}
 
 	// Last Population of the Vertices
-	MFnSkinCluster skin(skClusters[0]);
-	MFnSingleIndexedComponent c;
-	MObject component = c.create(MFn::kMeshVertComponent);
-	MFnSingleIndexedComponent comp(component); 
-	comp.setCompleteData(mesh.numVertices());
-
-	MStatus status = skin.getWeights(directShapePath,
-									 component,
-									 boneWeights,
-									 jointCount);
-
-	if(status != MStatus::kSuccess)
+	if(hasWeights)
 	{
-		cout << "ERROR : " << status << endl;
-	}
+		MFnSkinCluster skin(skClusters[0]);
+		MFnSingleIndexedComponent c;
+		MObject component = c.create(MFn::kMeshVertComponent);
+		MFnSingleIndexedComponent comp(component);
+		comp.setCompleteData(mesh.numVertices());
 
+		MStatus status = skin.getWeights(directShapePath,
+										 component,
+										 boneWeights,
+										 jointCount);
+
+		if(status != MStatus::kSuccess)
+		{
+			cout << "ERROR : " << status << endl;
+		}
+	}
 	////DEBUG
 	//cout << "****************************************" << endl;
 	//cout << "\tThis Faces Weights" << endl;
@@ -3208,7 +3210,7 @@ MStatus GFGTranslator::reader(const MFileObject& file,
 
 	//DEBUG
 	//cout << "Printing Options which will be used..." << endl;
-	PrintOptStruct();
+	//PrintOptStruct();
 	//DEBUG_END
 
 	// Check Export Mode
@@ -3271,7 +3273,7 @@ MStatus GFGTranslator::writer(const MFileObject& file,
 
 	//DEBUG
 	//cout << "Printing Options which will be used..." << endl;
-	PrintOptStruct();
+	//PrintOptStruct();
 	//DEBUG_END
 
 	// Add Root Node
