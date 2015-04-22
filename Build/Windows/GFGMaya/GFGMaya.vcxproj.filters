@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <None Include="..\..\..\Source\Autodesk Maya\GFGOpts.mel" />
     <None Include="..\..\..\Source\Autodesk Maya\GFGErrorWindow.mel" />
     <None Include="..\..\..\Source\Autodesk Maya\GFGReDeploy.mel" />
   </ItemGroup>
