@@ -2033,11 +2033,11 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 							point.get(posData);
 
 							aabbMax.x = std::max(point.x, aabbMax.x);
-							aabbMax.x = std::max(point.y, aabbMax.x);
-							aabbMax.x = std::max(point.z, aabbMax.x);
-									   
-							aabbMin.x = std::min(point.y, aabbMin.x);
-							aabbMin.y = std::min(point.z, aabbMin.y);
+							aabbMax.y = std::max(point.y, aabbMax.y);
+							aabbMax.z = std::max(point.z, aabbMax.z);
+									  
+							aabbMin.x = std::min(point.x, aabbMin.x);
+							aabbMin.y = std::min(point.y, aabbMin.y);
 							aabbMin.z = std::min(point.z, aabbMin.z);
 
 							if(!WritePosition(vertexData, posData)) return MStatus::kFailure;
