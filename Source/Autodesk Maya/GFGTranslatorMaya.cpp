@@ -1838,6 +1838,14 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 	// Determine Index Count
 	currentMeshHeader.indexCount = mesh.numFaceVertices();
 
+	// Determine AABB
+	MPoint aabbMin(std::numeric_limits<double>::max(),
+				   std::numeric_limits<double>::max(),
+				   std::numeric_limits<double>::max());
+	MPoint aabbMax(std::numeric_limits<double>::min(),
+				   std::numeric_limits<double>::min(),
+				   std::numeric_limits<double>::min());
+
 	// Get Mesh Data
 	MPointArray positions;
 	MFloatVectorArray normals;
@@ -2020,8 +2028,18 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 								break;
 
 							// Export Position
+							MPoint point = positions[vertexIterator.vertId()];
 							double posData[4];
-							positions[vertexIterator.vertId()].get(posData);
+							point.get(posData);
+
+							aabbMax.x = std::max(point.x, aabbMax.x);
+							aabbMax.x = std::max(point.y, aabbMax.x);
+							aabbMax.x = std::max(point.z, aabbMax.x);
+									   
+							aabbMin.x = std::min(point.y, aabbMin.x);
+							aabbMin.y = std::min(point.z, aabbMin.y);
+							aabbMin.z = std::min(point.z, aabbMin.z);
+
 							if(!WritePosition(vertexData, posData)) return MStatus::kFailure;
 							break;
 						}
@@ -2211,6 +2229,15 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 	//}
 	//cout << "Total Index Size: " << totalIndex << endl;
 	//DEBUGEND
+
+	// Write AABB
+	currentMeshHeader.aabb.max[0] = static_cast<float>(aabbMax.x);
+	currentMeshHeader.aabb.max[1] = static_cast<float>(aabbMax.y);
+	currentMeshHeader.aabb.max[2] = static_cast<float>(aabbMax.z);
+								  
+	currentMeshHeader.aabb.min[0] = static_cast<float>(aabbMin.x);
+	currentMeshHeader.aabb.min[1] = static_cast<float>(aabbMin.y);
+	currentMeshHeader.aabb.min[2] = static_cast<float>(aabbMin.z);
 
 	// Determine Vertex Count
 	currentMeshHeader.vertexCount = vertexLookup.size();
