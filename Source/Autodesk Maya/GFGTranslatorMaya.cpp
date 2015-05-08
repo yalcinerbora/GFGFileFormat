@@ -1842,9 +1842,9 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 	MPoint aabbMin(std::numeric_limits<double>::max(),
 				   std::numeric_limits<double>::max(),
 				   std::numeric_limits<double>::max());
-	MPoint aabbMax(std::numeric_limits<double>::min(),
-				   std::numeric_limits<double>::min(),
-				   std::numeric_limits<double>::min());
+	MPoint aabbMax(std::numeric_limits<double>::lowest(),
+				   std::numeric_limits<double>::lowest(),
+				   std::numeric_limits<double>::lowest());
 
 	// Get Mesh Data
 	MPointArray positions;
