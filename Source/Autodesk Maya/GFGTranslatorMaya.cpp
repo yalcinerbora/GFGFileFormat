@@ -2055,13 +2055,13 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 							normalDataD[1] = normals[vertexIterator.normalId()].y;
 							normalDataD[2] = normals[vertexIterator.normalId()].z;
 
-							tangentDataD[0] = tangents[vertexIterator.normalId()].x;
-							tangentDataD[1] = tangents[vertexIterator.normalId()].y;
-							tangentDataD[2] = tangents[vertexIterator.normalId()].z;
+							tangentDataD[0] = tangents[vertexIterator.tangentId()].x;
+							tangentDataD[1] = tangents[vertexIterator.tangentId()].y;
+							tangentDataD[2] = tangents[vertexIterator.tangentId()].z;
 
-							binormalDataD[0] = binormals[vertexIterator.normalId()].x;
-							binormalDataD[1] = binormals[vertexIterator.normalId()].y;
-							binormalDataD[2] = binormals[vertexIterator.normalId()].z;
+							binormalDataD[0] = binormals[vertexIterator.tangentId()].x;
+							binormalDataD[1] = binormals[vertexIterator.tangentId()].y;
+							binormalDataD[2] = binormals[vertexIterator.tangentId()].z;
 
 							GFGMayaOptionsIndex type = ElementIndexToComponent(eIndex);
 							if(type == GFGMayaOptionsIndex::NORMAL)
