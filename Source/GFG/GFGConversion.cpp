@@ -759,8 +759,8 @@ void GFGConversions::Custom_1_15N_16NToFloats(float dataOut[3], uint32_t data)
 	static unsigned int max15bitSigned = 0x3FFF;
 
 	int sign = data >> 31 == 0 ? 1 : -1;
-	dataOut[1] = static_cast<float>(data >> 16) / max16bitSigned;
-	dataOut[0] = static_cast<float>(data >> 0) / max15bitSigned;
+	dataOut[1] = static_cast<float>((data >> 16) & 0x0000FFFF) / max16bitSigned;
+	dataOut[0] = static_cast<float>((data >> 0) & 0x0000FFFF) / max15bitSigned;
 	dataOut[2] = sign * sqrt(1.0f - (dataOut[0] * dataOut[0] + dataOut[1] * dataOut[1]));
 }
 
@@ -771,8 +771,8 @@ void GFGConversions::Custom_1_15N_16NToDoubles(double dataOut[3], uint32_t data)
 	static unsigned int max15bitSigned = 0x3FFF;
 
 	int sign = data >> 31 == 0 ? 1 : -1;
-	dataOut[1] = static_cast<double>(data >> 16) / max16bitSigned;
-	dataOut[0] = static_cast<double>(data >> 0) / max15bitSigned;
+	dataOut[1] = static_cast<double>((data >> 16) & 0x0000FFFF) / max16bitSigned;
+	dataOut[0] = static_cast<double>((data >> 0) & 0x0000FFFF) / max15bitSigned;
 	dataOut[2] = sign * sqrt(1.0f - (dataOut[0] * dataOut[0] + dataOut[1] * dataOut[1]));
 }
 
