@@ -22,6 +22,84 @@ enum class GFGMayaPlugExportType
 	TEXTURE
 };
 
+
+static void	GetDataFromPlugBumpMap(GFGMaterialHeader& gfgMat,
+								   std::vector<uint8_t>& textureData,
+								   std::vector<uint8_t>& uniformData,
+								   const MPlug& p)
+{
+	bool filePathWritten = false;
+	MPlugArray connections;
+	p.connectedTo(connections, true, false);	// Outgoing connections
+	if(connections.length() > 0)
+	{
+		MObject source = connections[0].node();
+		if(source.hasFn(MFn::kBump))
+		{
+			// Guranteed to be bump2d
+			MFnDependencyNode fileNode(source);
+			MPlug bumpPlug = fileNode.findPlug("bumpValue", true);
+			connections.clear();
+			bumpPlug.connectedTo(connections, true, false);
+
+			if(connections.length() > 0)
+			{
+				MObject source = connections[0].node();
+				if(source.hasFn(MFn::kFileTexture))
+				{
+					// Gurantedd to be texture
+					MString filePath;
+					MFnDependencyNode fileNode(source);
+					MPlug fileNamePlug = fileNode.findPlug("fileTextureName", true);
+					
+					fileNamePlug.getValue(filePath);
+
+					// Save it as utf much more convinient
+					// Worst case read it as char array
+					// it will be 8 bit char if most of the text is ASCII anyway
+					int length;
+					const char* utf8String = filePath.asUTF8(length);
+					char nullTerminate = '\0';
+
+					cout << "Writing String : " << utf8String << endl;
+					if(length != 0)
+					{
+						// Allocate and Write
+						textureData.insert(textureData.end(), length + 1, 0);
+						std::memcpy(&textureData[textureData.size() - (length + 1)], utf8String, length);
+						std::memcpy(&nullTerminate, utf8String + length, 1);
+
+						gfgMat.textureList.emplace_back(GFGTexturePath
+						{
+							0,						// Will be populated by the gfgLoader
+							GFGStringType::UTF8,	// Type
+							length + 1				// Size in bytes
+						});
+						filePathWritten = true;
+					}
+				}
+			}
+		}
+	}
+
+	// Allocate and Write Dummy Float to prevent indexing mismatch
+	float dataDummy = 0.0f;
+	uniformData.insert(uniformData.end(), GFGDataTypeByteSize[static_cast<uint32_t>(GFGDataType::FLOAT_1)], 0);
+	std::memcpy(&uniformData[uniformData.size() - GFGDataTypeByteSize[static_cast<uint32_t>(GFGDataType::FLOAT_1)]],
+				&dataDummy,
+				sizeof(float));
+	cout << "Writing Float 1     " << dataDummy << endl;
+	gfgMat.uniformList.emplace_back(GFGUniformData
+	{
+		0,						// Will be populated by the gfgLoader
+		GFGDataType::FLOAT_1,	// Type
+	});
+
+	// In order to keep maya material ordering add dummy texture header object
+	if(!filePathWritten)
+		gfgMat.textureList.emplace_back(GFGTexturePath { 0, GFGStringType::EMPTY, 0 });
+}
+
 static void GetDataFromPlugTexturePath(GFGMaterialHeader& gfgMat,
 									   std::vector<uint8_t>& textureData,
 									   std::vector<uint8_t>& uniformData,
@@ -174,7 +252,7 @@ static bool CreateAndConnectTexture(MDagModifier& commandList,
 {
 	if(texturePath.stringType != GFGStringType::EMPTY)
 	{
-		MString texConenctCommand = "createRenderNodeCB - as2DTexture \"\" file "
+		MString texConnectCommand = "createRenderNodeCB - as2DTexture \"\" file "
 									"\"defaultNavigation -force true -connectToExisting -source %node -destination ";
 		MString filePath;
 		filePath.setUTF8(reinterpret_cast<const char*>(textureData.data() + texturePath.stringLocation));
@@ -182,7 +260,7 @@ static bool CreateAndConnectTexture(MDagModifier& commandList,
 		//cout << "Trying to Write String : " << filePath << endl;
 
 		MString result;
-		MGlobal::executeCommand(texConenctCommand + matFullPlugName + "; \"", result);
+		MGlobal::executeCommand(texConnectCommand + matFullPlugName + "; \"", result);
 		MGlobal::executeCommand("rename \"" + result + "\" " + textureName);
 		commandList.commandToExecute("setAttr " + textureName + ".fileTextureName -type \"string\" \"" + filePath + "\"");
 		return true;
@@ -623,15 +701,18 @@ void MayaToGFG::Material(GFGMaterialHeader& gfgMat,
 		MPlug transparency = lambDn.findPlug("transparency", true, &status);
 		MPlug aColor = lambDn.findPlug("ambientColor", true, &status);
 		MPlug icandes = lambDn.findPlug("incandescence", true, &status);
+		MPlug bump = lambDn.findPlug("normalCamera", true, &status);
 		MPlug diffuseFactor = lambDn.findPlug("diffuse", true, &status);
 		MPlug trans = lambDn.findPlug("translucence", true, &status);
 		MPlug transDepth = lambDn.findPlug("translucenceDepth", true, &status);
 		MPlug transFocus = lambDn.findPlug("translucenceFocus", true, &status);
 
+		// Ordering is important here
 		GetDataFromPlugFloat3(gfgMat, textureData, uniformData, color, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat3(gfgMat, textureData, uniformData, transparency, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat3(gfgMat, textureData, uniformData, aColor, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat3(gfgMat, textureData, uniformData, icandes, GFGMayaPlugExportType::BOTH);
+		GetDataFromPlugTexturePath(gfgMat, textureData, uniformData, bump);
 		GetDataFromPlugFloat(gfgMat, textureData, uniformData, diffuseFactor, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat(gfgMat, textureData, uniformData, trans, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat(gfgMat, textureData, uniformData, transDepth, GFGMayaPlugExportType::BOTH);
@@ -647,6 +728,7 @@ void MayaToGFG::Material(GFGMaterialHeader& gfgMat,
 		MPlug transparency = phongDn.findPlug("transparency", true, &status);
 		MPlug aColor = phongDn.findPlug("ambientColor", true, &status);
 		MPlug icandes = phongDn.findPlug("incandescence", true, &status);
+		MPlug bump = phongDn.findPlug("normalCamera", true, &status);
 		MPlug diffuseFactor = phongDn.findPlug("diffuse", true, &status);
 		MPlug trans = phongDn.findPlug("translucence", true, &status);
 		MPlug transDepth = phongDn.findPlug("translucenceDepth", true, &status);
@@ -657,10 +739,12 @@ void MayaToGFG::Material(GFGMaterialHeader& gfgMat,
 		MPlug reflectiv = phongDn.findPlug("reflectivity", true, &status);
 		MPlug reflectedColor = phongDn.findPlug("reflectedColor", true, &status);
 
+		// Ordering is important here
 		GetDataFromPlugFloat3(gfgMat, textureData, uniformData, color, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat3(gfgMat, textureData, uniformData, transparency, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat3(gfgMat, textureData, uniformData, aColor, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat3(gfgMat, textureData, uniformData, icandes, GFGMayaPlugExportType::BOTH);
+		GetDataFromPlugTexturePath(gfgMat, textureData, uniformData, bump);
 		GetDataFromPlugFloat(gfgMat, textureData, uniformData, diffuseFactor, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat(gfgMat, textureData, uniformData, trans, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat(gfgMat, textureData, uniformData, transDepth, GFGMayaPlugExportType::BOTH);
