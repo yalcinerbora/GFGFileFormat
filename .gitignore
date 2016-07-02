@@ -47,3 +47,4 @@ Bin/
 !Lib/**/*.dll
 
 !Lib/**/*.pch
+*.user

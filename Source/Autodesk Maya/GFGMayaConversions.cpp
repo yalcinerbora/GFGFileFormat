@@ -173,14 +173,12 @@ static void GetDataFromPlugFloat3(GFGMaterialHeader& gfgMat,
 					data, 
 					sizeof(float3));
 		cout << "Writing Float 3    " << data[0] << " " << data[1] << " " << data[2] << endl;
-
 		gfgMat.uniformList.emplace_back(GFGUniformData
 		{
 			0,						// Will be populated by the gfgLoader
 			GFGDataType::FLOAT_3,	// Type
 		});
-	}
-
+	}	
 }
 
 static void GetDataFromPlugFloat(GFGMaterialHeader& gfgMat,
@@ -204,7 +202,7 @@ static void GetDataFromPlugFloat(GFGMaterialHeader& gfgMat,
 					&data,
 					sizeof(float));
 		cout << "Writing Float 1     " << data << endl;
-
+		// Always add uniform in order to keep ordering
 		gfgMat.uniformList.emplace_back(GFGUniformData
 		{
 			0,						// Will be populated by the gfgLoader
@@ -712,7 +710,7 @@ void MayaToGFG::Material(GFGMaterialHeader& gfgMat,
 		GetDataFromPlugFloat3(gfgMat, textureData, uniformData, transparency, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat3(gfgMat, textureData, uniformData, aColor, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat3(gfgMat, textureData, uniformData, icandes, GFGMayaPlugExportType::BOTH);
-		GetDataFromPlugTexturePath(gfgMat, textureData, uniformData, bump);
+		GetDataFromPlugBumpMap(gfgMat, textureData, uniformData, bump);
 		GetDataFromPlugFloat(gfgMat, textureData, uniformData, diffuseFactor, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat(gfgMat, textureData, uniformData, trans, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat(gfgMat, textureData, uniformData, transDepth, GFGMayaPlugExportType::BOTH);
@@ -744,7 +742,7 @@ void MayaToGFG::Material(GFGMaterialHeader& gfgMat,
 		GetDataFromPlugFloat3(gfgMat, textureData, uniformData, transparency, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat3(gfgMat, textureData, uniformData, aColor, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat3(gfgMat, textureData, uniformData, icandes, GFGMayaPlugExportType::BOTH);
-		GetDataFromPlugTexturePath(gfgMat, textureData, uniformData, bump);
+		GetDataFromPlugBumpMap(gfgMat, textureData, uniformData, bump);
 		GetDataFromPlugFloat(gfgMat, textureData, uniformData, diffuseFactor, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat(gfgMat, textureData, uniformData, trans, GFGMayaPlugExportType::BOTH);
 		GetDataFromPlugFloat(gfgMat, textureData, uniformData, transDepth, GFGMayaPlugExportType::BOTH);
