@@ -1,21 +1,21 @@
 global proc string GFGReDeploy (string $type)
 {
 	string $gfgOptsIDest = "C:/Program Files/Autodesk/Maya2016/scripts/others/GFGOptsImport.mel";
-	string $gfgOptsISrc = "D:/GitHub/GFGFileFormat/Source/Autodesk Maya/GFGOptsImport.mel";
+	string $gfgOptsISrc = "E:/Bora/Github/GFGFileFormat/Source/Autodesk Maya/GFGOptsImport.mel";
 	
 	string $gfgOptsEDest = "C:/Program Files/Autodesk/Maya2016/scripts/others/GFGOptsExport.mel";
-	string $gfgOptsESrc = "C:/Program Files/Autodesk/Maya2016/scripts/others/GFGOptsExport.mel";
+	string $gfgOptsESrc = "E:/Bora/Github/GFGFileFormat/Source/Autodesk Maya/GFGOptsExport.mel";
 	
 	string $gfgReDeployDest = "C:/Program Files/Autodesk/Maya2016/scripts/others/GFGReDeploy.mel";
-	string $gfgReDeploySrc = "D:/GitHub/GFGFileFormat/Source/Autodesk Maya/GFGReDeploy.mel";
+	string $gfgReDeploySrc = "E:/Bora/Github/GFGFileFormat/Source/Autodesk Maya/GFGReDeploy.mel";
 	
 	string $gfgErrWindowDest = "C:/Program Files/Autodesk/Maya2016/scripts/others/GFGErrorWindow.mel";
-	string $gfgErrWindowSrc = "D:/GitHub/GFGFileFormat/Source/Autodesk Maya/GFGErrorWindow.mel";
+	string $gfgErrWindowSrc = "E:/Bora/Github/GFGFileFormat/Source/Autodesk Maya/GFGErrorWindow.mel";
 
-	if(!sysFile -copy $gfgOptsEDest $gfgOptsESrc) return "Error Copy Opts Export";
-	if(!sysFile -copy $gfgOptsIDest $gfgOptsISrc) return "Error Copy Opts Import";
-	if(!sysFile -copy $gfgErrWindowDest $gfgErrWindowSrc) return "Error Copy Window";
-	if(!sysFile -copy $gfgReDeployDest $gfgReDeploySrc) return "Error Copy Opts Redeploy";
+	if(!`sysFile -copy $gfgOptsEDest $gfgOptsESrc`) return "Error Copy Opts Export";
+	if(!`sysFile -copy $gfgOptsIDest $gfgOptsISrc`) return "Error Copy Opts Import";
+	if(!`sysFile -copy $gfgErrWindowDest $gfgErrWindowSrc`) return "Error Copy Window";
+	if(!`sysFile -copy $gfgReDeployDest $gfgReDeploySrc`) return "Error Copy Opts Redeploy";
 	source "GFGOptsImport.mel";
 	source "GFGOptsExport.mel";
 	source "GFGErrorWindow.mel";
@@ -25,24 +25,24 @@ global proc string GFGReDeploy (string $type)
 	{
 		//DEBUG
 		string $destMLL = "C:/Program Files/Autodesk/Maya2016/bin/plug-ins/GFGMaya.mll";
-		string $srcMLL = "D:/GitHub/GFGFileFormat/Bin/Windows/Debug/GFGMaya.mll";
+		string $srcMLL = "E:/Bora/Github/GFGFileFormat/Bin/Windows/Debug/GFGMaya.mll";
 
 		string $destPDB = "C:/Program Files/Autodesk/Maya2016/bin/plug-ins/GFGMaya.pdb";
-		string $srcPDB = "D:/GitHub/GFGFileFormat/Bin/Windows/Debug/GFGMaya.pdb";
+		string $srcPDB = "E:/Bora/Github/GFGFileFormat/Bin/Windows/Debug/GFGMaya.pdb";
 		
 		unloadPlugin "GFGMaya.mll";
-		if(!sysFile -copy $destMLL $srcMLL) return "Unable to Copy Debug MLL";
-		if(!sysFile -copy $destPDB $srcPDB) return "Unable to Copy Debug PDB";
+		if(!`sysFile -copy $destMLL $srcMLL`) return "Unable to Copy Debug MLL";
+		if(!`sysFile -copy $destPDB $srcPDB`) return "Unable to Copy Debug PDB";
 		loadPlugin "GFGMaya.mll";
 	}
 	else if($type == "release")
 	{
 		//RELEASE
 		string $destMLL = "C:/Program Files/Autodesk/Maya2016/bin/plug-ins/GFGMaya.mll";
-		string $srcMLL = "D:/GitHub/GFGFileFormat/Bin/Windows/Release/GFGMaya.mll";
+		string $srcMLL = "E:/Bora/Github/GFGFileFormat/Bin/Windows/Release/GFGMaya.mll";
 
 		unloadPlugin "GFGMaya.mll";
-		if(!sysFile -copy $destMLL $srcMLL) return "Unable to Copy Release MLL";
+		if(!`sysFile -copy $destMLL $srcMLL`) return "Unable to Copy Release MLL";
 		loadPlugin "GFGMaya.mll";
 	}
 	else

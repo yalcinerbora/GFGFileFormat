@@ -243,13 +243,7 @@ GFGFileError GFGFileLoader::ValidateAndOpen()
 	for(unsigned int i = 0; i < header.animationList.nodeAmount; i++)
 	{
 		size_t headerLoc = header.animationList.animationLocations[i];
-		std::memcpy(&header.animations[i].headerCore, headerData.data() + headerLoc, sizeof(GFGAnimationHeaderCore));
-
-		// Write Key Frames
-		header.animations[i].keyFrames.resize(header.animations[i].headerCore.keyframeAmount);
-		std::memcpy(header.animations[i].keyFrames.data(),
-					headerData.data() + headerLoc + sizeof(GFGAnimationHeaderCore),
-					header.animations[i].headerCore.keyframeAmount * sizeof(GFGKeyFrame));
+		std::memcpy(&header.animations[i], headerData.data() + headerLoc, sizeof(GFGAnimationHeader));
 	}
 
 	// Transforms
@@ -390,10 +384,10 @@ GFGFileError GFGFileLoader::AnimationKeyframeData(GFGTransform data[], uint32_t 
 {
 	assert(animIndex < header.animationList.nodeAmount);
 	assert(valid);
-	if(header.headerSize + header.animations[animIndex].headerCore.dataStart >= reader->GetFileSize())
+	if(header.headerSize + header.animations[animIndex].dataStart >= reader->GetFileSize())
 		return GFGFileError::DATA_OFFSET_WRONG;
 
-	reader->MovePtrAbs(header.headerSize + header.animations[animIndex].headerCore.dataStart);
+	reader->MovePtrAbs(header.headerSize + header.animations[animIndex].dataStart);
 	size_t readAmount = AnimationKeyframeDataSize(animIndex);
 	reader->Read(reinterpret_cast<uint8_t*>(data), readAmount);
 	return GFGFileError::OK;
@@ -402,10 +396,10 @@ GFGFileError GFGFileLoader::AnimationKeyframeData(GFGTransform data[], uint32_t 
 GFGFileError GFGFileLoader::AllAnimationKeyframeData(GFGTransform data[])
 {
 	assert(valid);
-	if(header.headerSize + header.animations[0].headerCore.dataStart >= reader->GetFileSize())
+	if(header.headerSize + header.animations[0].dataStart >= reader->GetFileSize())
 		return GFGFileError::DATA_OFFSET_WRONG;
 
-	reader->MovePtrAbs(header.headerSize + header.animations[0].headerCore.dataStart);
+	reader->MovePtrAbs(header.headerSize + header.animations[0].dataStart);
 	size_t readAmount = AllAnimationKeyframeDataSize();
 	reader->Read(reinterpret_cast<uint8_t*>(data), readAmount);
 	return GFGFileError::OK;
@@ -524,7 +518,7 @@ uint64_t GFGFileLoader::AnimationKeyframeDataSize(uint32_t animIndex) const
 	assert(animIndex < header.animationList.nodeAmount);
 	assert(valid);
 	
-	return header.animations[animIndex].headerCore.keyframeAmount * sizeof(GFGTransform);
+	return header.animations[animIndex].keyCount * sizeof(GFGTransform);
 }
 
 uint64_t GFGFileLoader::AllAnimationKeyframeDataSize()const
@@ -532,6 +526,6 @@ uint64_t GFGFileLoader::AllAnimationKeyframeDataSize()const
 	assert(valid);
 
 	if(header.animationList.nodeAmount != 0)
-		return reader->GetFileSize() - header.animations[0].headerCore.keyframeAmount * sizeof(GFGTransform);
+		return reader->GetFileSize() - header.animations[0].keyCount * sizeof(GFGTransform);
 	return 0;
 }

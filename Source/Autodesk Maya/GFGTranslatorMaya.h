@@ -76,7 +76,6 @@ class GFGTranslator : public MPxFileTranslator
 		MStatus					GetReferencedMaterials(MObjectArray& materials, MIntArray& indices, unsigned int instanceNo, const MFnMesh& mesh) const;
 		MStatus					WriteReferencedMaterials(std::vector<uint32_t>& materialIndexGFG, const MObjectArray& materials);
 		MStatus					ExportSkeleton(const MDagPath& skeletonRootBone, bool inSelectionList);
-		MStatus					ExportAnimationOnSkeleton(const MDagPath& skeletonRootBone);
 		MStatus					BakeTransform(GFGTransform& transform, const MDagPath& node);
 		static MStatus			WeightExportCommon();
 

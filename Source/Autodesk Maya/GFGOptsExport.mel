@@ -285,6 +285,22 @@ global proc int GFGOptsExport ( string $parent,
 	$indexDataTypes[1] = "UINT16";
 	$indexDataTypes[2] = "UINT32";
 	
+	string $animationLayoutTypes[];
+	$animationLayoutTypes[0] = "Keys of Bones";
+	$animationLayoutTypes[1] = "Bone of Keys";
+
+	string $quaternionLayoutTypes[];
+	$quaternionLayoutTypes[0] = "WXYZ";
+	$quaternionLayoutTypes[1] = "XYZW";
+	
+	string $animationInterpTypes[];
+	$animationInterpTypes[0] = "Slerp";
+	$animationInterpTypes[1] = "Cubic";	
+	
+	string $animationTypes[];
+	$animationTypes[0] = "With Hip Translate";
+	$animationTypes[1] = "Only Rotations";	
+	
 	string $headerSting = "\"GPU Friendly Graphics\" File Format Exporter";
 	
 	// Option Saver
@@ -327,7 +343,7 @@ global proc int GFGOptsExport ( string $parent,
 		
 		separator -style "none" -h 10;
 		// Vertex Export
-		frameLayout -label "Vertex Component Export" -collapsable false -borderStyle "etchedIn"; 
+		frameLayout -label "Vertex Component Export" -collapsable false ; 
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				checkBox -label ("Export Normals") normOn;
 				checkBox -label ("Export UVs") uvOn;
@@ -338,26 +354,52 @@ global proc int GFGOptsExport ( string $parent,
 			setParent ..;
 		setParent ..;
 		// Materials
-		frameLayout -label "Material Export" -collapsable true -borderStyle "etchedIn"; 
+		frameLayout -label "Material Export" -collapsable true ; 
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				checkBox -label ("Export Materials") matOn;
 				checkBox -label ("Empty Materials") matEmpty;
 			setParent ..;
 		setParent ..;
 		// Skeleton
-		frameLayout -label "Skeleton Export" -collapsable true -borderStyle "etchedIn"; 
+		frameLayout -label "Skeleton Export" -collapsable true ; 
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				checkBox -label ("Export Skeleton") skelOn;
 			setParent ..;
 		setParent ..;
+		// Animation
+		frameLayout -label "Animation Export" -collapsable true ; 
+			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
+				checkBox -label ("Export Animation") animOn;
+				optionMenu -label "Animation Type:" animType;
+					for ($index = 0; $index < size($animationTypes); $index++) 
+					{
+						menuItem -label $animationTypes[$index];
+					}
+				optionMenu -label "Animation Interpolation:" animInterp;
+					for ($index = 0; $index < size($animationInterpTypes); $index++) 
+					{
+						menuItem -label $animationInterpTypes[$index];
+					}
+				optionMenu -label "Quaternion Layout:" quatLayout;
+					for ($index = 0; $index < size($quaternionLayoutTypes); $index++) 
+					{
+						menuItem -label $quaternionLayoutTypes[$index];
+					}
+				optionMenu -label "Animation Layout:" animLayout;
+					for ($index = 0; $index < size($animationLayoutTypes); $index++) 
+					{
+						menuItem -label $animationLayoutTypes[$index];
+					}
+			setParent ..;
+		setParent ..;
 		// Hierarchy
-		frameLayout -label "Hierarchy Export" -collapsable true -borderStyle "etchedIn"; 
+		frameLayout -label "Hierarchy Export" -collapsable true ; 
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				checkBox -label ("Export Hierarchy") hierOn;
 			setParent ..;
 		setParent ..;
 		// Index
-		frameLayout -label "Index Size" -collapsable true -borderStyle "etchedIn";
+		frameLayout -label "Index Size" -collapsable true ;
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				optionMenu -label "Index Data Type:" iData;
 					for ($index = 0; $index < size($indexDataTypes); $index++) 
@@ -367,10 +409,10 @@ global proc int GFGOptsExport ( string $parent,
 			setParent ..;
 		setParent ..;
 		// Vertex Component Data Types
-		frameLayout -label "Vertex Component Data Types" -collapsable true -borderStyle "etchedIn"; 
+		frameLayout -label "Vertex Component Data Types" -collapsable true ; 
 			columnLayout -cal "center" -rowSpacing 5;
 				// Position
-				frameLayout -w $frameLayoutWidth -label "Vertex Position" -collapsable true -borderStyle "etchedIn"; 
+				frameLayout -w $frameLayoutWidth -label "Vertex Position" -collapsable true ; 
 					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
 						optionMenu -label "Position Data Type:" vData;
 							for ($index = 0; $index < size($gfgDataTypes); $index++) 
@@ -395,7 +437,7 @@ global proc int GFGOptsExport ( string $parent,
 					setParent ..;
 				setParent ..;
 				// Normal
-				frameLayout -w $frameLayoutWidth -label "Vertex Normal" -collapsable true -borderStyle "etchedIn"; 
+				frameLayout -w $frameLayoutWidth -label "Vertex Normal" -collapsable true ; 
 					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
 						optionMenu -label "Normal Data Type:" vnData;
 							for ($index = 0; $index < size($gfgDataTypes); $index++) 
@@ -431,7 +473,7 @@ global proc int GFGOptsExport ( string $parent,
 					setParent ..;
 				setParent ..;
 				// UVs
-				frameLayout -w $frameLayoutWidth -label "Vertex UV" -collapsable true -borderStyle "etchedIn"; 
+				frameLayout -w $frameLayoutWidth -label "Vertex UV" -collapsable true ; 
 					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
 						optionMenu -label "UV Data Type:" vuvData;
 							for ($index = 0; $index < size($gfgDataTypes); $index++) 
@@ -459,7 +501,7 @@ global proc int GFGOptsExport ( string $parent,
 					setParent ..;
 				setParent ..;
 				// Tangent
-				frameLayout -w $frameLayoutWidth -label "Vertex Tangent" -collapsable true -borderStyle "etchedIn"; 
+				frameLayout -w $frameLayoutWidth -label "Vertex Tangent" -collapsable true ; 
 					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
 						optionMenu -label "Tangent Data Type:" vtData;
 							for ($index = 0; $index < size($gfgDataTypes); $index++) 
@@ -495,7 +537,7 @@ global proc int GFGOptsExport ( string $parent,
 					setParent ..;
 				setParent ..;
 				// Binormal
-				frameLayout -w $frameLayoutWidth -label "Vertex Binormal" -collapsable true -borderStyle "etchedIn"; 
+				frameLayout -w $frameLayoutWidth -label "Vertex Binormal" -collapsable true ; 
 					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
 						optionMenu -label "Binormal Data Type:" vbnData;
 							for ($index = 0; $index < size($gfgDataTypes); $index++) 
@@ -531,7 +573,7 @@ global proc int GFGOptsExport ( string $parent,
 					setParent ..;
 				setParent ..;
 				// Weights
-				frameLayout -w $frameLayoutWidth -label "Vertex Weight" -collapsable true -borderStyle "etchedIn"; 
+				frameLayout -w $frameLayoutWidth -label "Vertex Weight" -collapsable true ; 
 					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
 						optionMenu -label "Weight Data Type:" vwData;
 							for ($index = 0; $index < size($gfgDataTypes); $index++) 
@@ -624,7 +666,7 @@ global proc int GFGOptsExport ( string $parent,
 					setParent ..;
 				setParent ..;
 				// Color
-				frameLayout -w $frameLayoutWidth -label "Vertex Color" -collapsable true -borderStyle "etchedIn"; 
+				frameLayout -w $frameLayoutWidth -label "Vertex Color" -collapsable true ; 
 					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
 						optionMenu -label "Color Data Type:" vcData;
 							for ($index = 0; $index < size($gfgDataTypes); $index++) 
@@ -657,7 +699,7 @@ global proc int GFGOptsExport ( string $parent,
 		setParent ..;
 				
 		// Vertex Grouping
-		frameLayout -label "Vertex Component Ordering" -collapsable true -borderStyle "etchedIn"; 
+		frameLayout -label "Vertex Component Ordering" -collapsable true; 
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" 20;
 				rowLayout -numberOfColumns 2 -columnWidth2 50 $groupingOrderSliderWidth;
 					text -label "P:";
@@ -835,6 +877,34 @@ global proc int GFGOptsExport ( string $parent,
 					{
 						checkBox -e -v true skelOn;
 					}
+				}
+				// Export Animations
+				else if ($optionBreakDown[0] == "animOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false animOn;
+					} 
+					else 
+					{
+						checkBox -e -v true animOn;
+					}
+				}
+				else if ($optionBreakDown[0] == "animType") 
+				{
+					optionMenu -e -sl (((int)$optionBreakDown[1])+1) animType;
+				}
+				else if ($optionBreakDown[0] == "animInterp") 
+				{
+					optionMenu -e -sl (((int)$optionBreakDown[1])+1) animInterp;
+				}
+				else if ($optionBreakDown[0] == "animLayout") 
+				{
+					optionMenu -e -sl (((int)$optionBreakDown[1])+1) animLayout;
+				}
+				else if ($optionBreakDown[0] == "quatLayout") 
+				{
+					optionMenu -e -sl (((int)$optionBreakDown[1])+1) quatLayout;
 				}
 				//***************************//
 				// Vertex
@@ -1021,6 +1091,19 @@ global proc int GFGOptsExport ( string $parent,
 		{
 			$currentOptions = $currentOptions + ";skelOn=0";
 		}
+		// Animation Export
+		if (`checkBox -q -v animOn`)
+		{
+			$currentOptions = $currentOptions + ";animOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";animOn=0";
+		}
+		$currentOptions = $currentOptions + ";animType=" + (`optionMenu -q -sl animType` - 1);
+		$currentOptions = $currentOptions + ";animInterp=" + (`optionMenu -q -sl animInterp` - 1);
+		$currentOptions = $currentOptions + ";animLayout=" + (`optionMenu -q -sl animLayout` - 1);
+		$currentOptions = $currentOptions + ";quatLayout=" + (`optionMenu -q -sl quatLayout` - 1);
 		// Index Data
 		$currentOptions = $currentOptions + ";iData=" + (`optionMenu -q -sl iData` - 1);
 		//***************************//

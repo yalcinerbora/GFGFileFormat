@@ -22,31 +22,20 @@ bool GFGMayaOptions::ParseOptionBool(bool& result,
 	return false;
 }
 
-bool GFGMayaOptions::ParseOptionGFGData(GFGDataType& result,
-									   const MStringArray& currentOption,
-									   const char* optName)
+template<class T>
+bool GFGMayaOptions::ParseOptionEnum(T& result, const MStringArray& currentOption, const char* optName)
 {
 	if(currentOption[0] == MString(optName) &&
 	   currentOption.length() > 1)
 	{
-		result = static_cast<GFGDataType>(currentOption[1].asInt());
+		result = static_cast<T>(currentOption[1].asInt());
 		return true;
 	}
 	return false;
 }
 
-bool GFGMayaOptions::ParseOptionIndexData(GFGIndexDataType& result, 
-										  const MStringArray& currentOption, 
-										  const char* optName)
-{
-	if(currentOption[0] == MString(optName) &&
-	   currentOption.length() > 1)
-	{
-		result = static_cast<GFGIndexDataType>(currentOption[1].asInt());
-		return true;
-	}
-	return false;
-}
+static bool ParseOptionAnimLayout(GFGAnimationLayout&, const MStringArray&, const char*);
+static bool ParseOptionAnimInterp(GFGQuatInterpType&, const MStringArray&, const char*);
 
 bool GFGMayaOptions::ParseOptionInt(uint32_t& result,
 									const MStringArray& currentOption,
@@ -56,19 +45,6 @@ bool GFGMayaOptions::ParseOptionInt(uint32_t& result,
 	   currentOption.length() > 1)
 	{
 		result = static_cast<uint32_t>(currentOption[1].asInt());
-		return true;
-	}
-	return false;
-}
-
-bool GFGMayaOptions::ParseOptionGFGMayaTraversal(GFGMayaTraversal& result,
-												 const MStringArray& currentOption,
-												 const char* optName)
-{
-	if(currentOption[0] == MString(optName) &&
-	   currentOption.length() > 1)
-	{
-		result = static_cast<GFGMayaTraversal>(currentOption[1].asInt());
 		return true;
 	}
 	return false;
@@ -103,43 +79,49 @@ MStatus GFGMayaOptions::PopulateOptions(const MString& options)
 
 			ParseOptionBool(hierOn, currentOption, "hierOn");
 			ParseOptionBool(skelOn, currentOption, "skelOn");
+			ParseOptionBool(animOn, currentOption, "animOn");
+
+			ParseOptionEnum<GFGAnimType>(animType, currentOption, "animType");
+			ParseOptionEnum<GFGAnimationLayout>(animLayout, currentOption, "animLayout");
+			ParseOptionEnum<GFGQuatInterpType>(animInterp, currentOption, "animInterp");
+			ParseOptionEnum<GFGQuatLayout>(quatLayout, currentOption, "quatLayout");
 
 			// Index Data
-			ParseOptionIndexData(iData, currentOption, "iData");
+			ParseOptionEnum<GFGIndexDataType>(iData, currentOption, "iData");
 
 			// Vertex
 			// Position Options
-			ParseOptionGFGData(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::POSITION)], currentOption, "vData");
+			ParseOptionEnum<GFGDataType>(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::POSITION)], currentOption, "vData");
 			ParseOptionInt(layout[static_cast<uint32_t>(GFGMayaOptionsIndex::POSITION)], currentOption, "vLayout");
 
 			// Normals Options
-			ParseOptionGFGData(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::NORMAL)], currentOption, "vnData");
+			ParseOptionEnum<GFGDataType>(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::NORMAL)], currentOption, "vnData");
 			ParseOptionInt(layout[static_cast<uint32_t>(GFGMayaOptionsIndex::NORMAL)], currentOption, "vnLayout");
 
 			// Uv Options
-			ParseOptionGFGData(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::UV)], currentOption, "vuvData");
+			ParseOptionEnum<GFGDataType>(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::UV)], currentOption, "vuvData");
 			ParseOptionInt(layout[static_cast<uint32_t>(GFGMayaOptionsIndex::UV)], currentOption, "vuvLayout");
 
 			// Tangent Options
-			ParseOptionGFGData(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::TANGENT)], currentOption, "vtData");
+			ParseOptionEnum<GFGDataType>(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::TANGENT)], currentOption, "vtData");
 			ParseOptionInt(layout[static_cast<uint32_t>(GFGMayaOptionsIndex::TANGENT)], currentOption, "vtLayout");
 
 			// Binormal Options
-			ParseOptionGFGData(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::BINORMAL)], currentOption, "vbnData");
+			ParseOptionEnum<GFGDataType>(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::BINORMAL)], currentOption, "vbnData");
 			ParseOptionInt(layout[static_cast<uint32_t>(GFGMayaOptionsIndex::BINORMAL)], currentOption, "vbnLayout");
 
 			// Weight Options
-			ParseOptionGFGData(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)], currentOption, "vwData");
+			ParseOptionEnum<GFGDataType>(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)], currentOption, "vwData");
 			ParseOptionInt(layout[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT)], currentOption, "vwLayout");
 
-			ParseOptionGFGData(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)], currentOption, "vwiData");
+			ParseOptionEnum<GFGDataType>(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)], currentOption, "vwiData");
 			ParseOptionInt(layout[static_cast<uint32_t>(GFGMayaOptionsIndex::WEIGHT_INDEX)], currentOption, "vwiLayout");
 
-			ParseOptionGFGMayaTraversal(boneTraverse, currentOption, "boneTraversal");
+			ParseOptionEnum<GFGMayaTraversal>(boneTraverse, currentOption, "boneTraversal");
 			ParseOptionInt(influence, currentOption, "influence");
 
 			// Color Options
-			ParseOptionGFGData(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::COLOR)], currentOption, "vcData");
+			ParseOptionEnum<GFGDataType>(dataTypes[static_cast<uint32_t>(GFGMayaOptionsIndex::COLOR)], currentOption, "vcData");
 			ParseOptionInt(layout[static_cast<uint32_t>(GFGMayaOptionsIndex::COLOR)], currentOption, "vcLayout");
 
 			// Parse Layout String

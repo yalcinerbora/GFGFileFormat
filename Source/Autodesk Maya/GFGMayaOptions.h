@@ -13,6 +13,7 @@ https://github.com/yalcinerbora/GFGFileFormat/blob/master/LICENSE
 
 #include "GFGMayaStructures.h"
 #include "GFG/GFGEnumerations.h"
+#include "GFG/GFGAnimationHeader.h"
 
 class MStringArray;
 class MStatus;
@@ -22,10 +23,10 @@ struct GFGMayaOptions
 	private:
 		// Option Parse Related Functions
 		static bool					ParseOptionBool(bool&, const MStringArray&, const char*);
-		static bool					ParseOptionGFGData(GFGDataType&, const MStringArray&, const char*);
-		static bool					ParseOptionIndexData(GFGIndexDataType&, const MStringArray&, const char*);
 		static bool					ParseOptionInt(uint32_t&, const MStringArray&, const char*);
-		static bool					ParseOptionGFGMayaTraversal(GFGMayaTraversal&, const MStringArray&, const char*);
+
+		template<class T>
+		static bool					ParseOptionEnum(T&, const MStringArray&, const char*);
 
 	public:
 		static const unsigned int	MayaVertexElementCount = 8;
@@ -38,6 +39,12 @@ struct GFGMayaOptions
 
 		bool						hierOn = true;
 		bool						skelOn = true;
+		bool						animOn = true;
+
+		GFGAnimationLayout			animLayout;
+		GFGAnimType					animType;
+		GFGQuatInterpType			animInterp;
+		GFGQuatLayout				quatLayout;
 
 		// index
 		GFGIndexDataType			iData = GFGIndexDataType::UINT32;

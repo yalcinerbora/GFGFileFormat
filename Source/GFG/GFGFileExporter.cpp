@@ -147,10 +147,10 @@ uint32_t GFGFileExporter::AddSkeleton(const std::vector<uint32_t>& parentHierarc
 }
 
 uint32_t GFGFileExporter::AddMaterial(GFGMaterialLogic logic,
-									std::vector<GFGTexturePath>* textureList,
-									std::vector<GFGUniformData>* uniformList,
-									std::vector<uint8_t>* texturePathData,
-									std::vector<uint8_t>* uniformData)
+									  const std::vector<GFGTexturePath>* textureList,
+									  const std::vector<GFGUniformData>* uniformList,
+									  const std::vector<uint8_t>* texturePathData,
+									  const std::vector<uint8_t>* uniformData)
 {
 	uint32_t texCount = (textureList != nullptr) ? static_cast<uint32_t>(textureList->size()) : 0;
 	uint32_t uniformCount = (uniformList != nullptr) ? static_cast<uint32_t>(uniformList->size()) : 0;
@@ -185,6 +185,35 @@ uint32_t GFGFileExporter::AddNode(const GFGTransform& transform,
 	uint32_t transformIndex = static_cast<uint32_t>(gfgHeader.transformData.transforms.size() - 1);
 	gfgHeader.sceneHierarchy.nodes.emplace_back(GFGNode {parent, transformIndex, -1});
 	return  static_cast<uint32_t>(gfgHeader.sceneHierarchy.nodes.size() - 1);
+}
+
+uint32_t  GFGFileExporter::AddAnimation(GFGAnimationLayout layout,
+										GFGAnimType type,
+										GFGQuatInterpType interpType,
+										GFGQuatLayout quatLayout,
+										uint32_t skeletonIndex,
+										uint32_t keyCount,
+										const std::vector<uint8_t>& animData)
+{
+	gfgHeader.animations.emplace_back
+	(
+		GFGAnimationHeader
+		{
+			0,		// Will be  calculated later
+			layout,	
+			type,
+			interpType,
+			quatLayout,
+			skeletonIndex,
+			keyCount
+		}
+	);
+	
+	// Actual Data Push
+	animationData.emplace_back(animData);
+
+	uint32_t animID = static_cast<uint32_t>(gfgHeader.animations.size() - 1);
+	return animID;
 }
 
 void GFGFileExporter::Clear()
@@ -275,8 +304,7 @@ void GFGFileExporter::Write(GFGFileWriterI& writer)
 	// Animation
 	for(const GFGAnimationHeader& anim : header.animations)
 	{
-		writer.Write(reinterpret_cast<const uint8_t*>(&anim.headerCore), sizeof(GFGAnimationHeaderCore));
-		writer.Write(reinterpret_cast<const uint8_t*>(anim.keyFrames.data()), anim.headerCore.keyframeAmount * sizeof(GFGKeyFrame));
+		writer.Write(reinterpret_cast<const uint8_t*>(&anim), sizeof(GFGAnimationHeader));
 	}
 
 	// Transforms

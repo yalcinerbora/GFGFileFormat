@@ -106,6 +106,13 @@ const char* GFGTranslator::defaultOptions = ""
 											// Skeleton
 											"skelOn=1;"			// Export Skeleton
 
+											// Animation
+											"animOn=1;"			// Export Animation
+											"animType=0;"		// Animation Type
+											"animLayout=0;"		// Animation Layout
+											"animInterp=0;"		// Animation Interpolation
+											"quatLayout=0;"		// Quaternion Layout
+
 											// Index
 											"iData=2;"			// Index Data Type
 
@@ -2566,9 +2573,10 @@ MStatus GFGTranslator::ExportSkeleton(const MDagPath& root, bool inSelectionList
 	// User may have other DagNodes in between joints 
 	// (groups etc.)
 	// Assume those as joints aswell (bind pose will not fuck up then)
-	// Clean proper maya user should not have stuff in between joints, however we need to consider it for
+	// Clean, proper maya user should not have stuff in between joints, however we need to consider it for consistency
 	
-	// GFG Does not have Joint Orient Transform since its a convinience in maya to have proper object translations
+	// GFG Does not have Joint Orient Transform thus we need to incorporate them as well 
+	// TODO: joint orient (check this i do not remember implmenting this)
 	// Bake the Joint Orient to the bind pose
 	
 	// Other than that it should be ok
@@ -2675,17 +2683,16 @@ MStatus GFGTranslator::ExportSkeleton(const MDagPath& root, bool inSelectionList
 	skeletonExport.push_back(inSelectionList);
 
 	// Send to File
-	if(gfgOptions.skelOn &&
-	   inSelectionList)
+	if(gfgOptions.skelOn && inSelectionList)
+	{
 		gfgExporter.AddSkeleton(parentIndices, currenSkelTransforms);
-
+		if(gfgOptions.animOn)
+		{
+			// Export Animation
+			//gfgExporter.AddAnimation();
+		}
+	}
 	return MStatus::kSuccess;
-}
-
-MStatus GFGTranslator::ExportAnimationOnSkeleton(const MDagPath& skeletonRootBone)
-{
-	assert(false);
-	return MStatus::kFailure;
 }
 
 MStatus GFGTranslator::BakeTransform(GFGTransform& transform, const MDagPath& node)
@@ -2918,6 +2925,11 @@ void GFGTranslator::PrintOptStruct() const
 	cout << endl;
 	cout << "Exporting Hierarchy\t" << gfgOptions.hierOn << endl;
 	cout << "Exporting Skeleton\t" << gfgOptions.skelOn << endl;
+	cout << "Exporting Animation\t" << gfgOptions.animOn << endl;
+	cout << "Animation Layout\t" << static_cast<uint32_t>(gfgOptions.animLayout) << endl;
+	cout << "Animation Interpolation\t" << static_cast<uint32_t>(gfgOptions.animInterp) << endl;
+	cout << "Animation Type\t\t" << static_cast<uint32_t>(gfgOptions.animType) << endl;
+	cout << "Quaternion Layout\t" << static_cast<uint32_t>(gfgOptions.quatLayout) << endl;
 	cout << endl;
 	cout << "Index Data Type\t\t" << static_cast<uint32_t>(gfgOptions.iData) << endl;
 	cout << endl;
@@ -3211,6 +3223,8 @@ MStatus GFGTranslator::reader(const MFileObject& file,
 							  const MString& options,
 							  MPxFileTranslator::FileAccessMode mode)
 {
+	cout.rdbuf(cerr.rdbuf());
+
 	CheckErrorRAII r(errorList);
 	// Welcome Message
 	cout << "\"GPU Friendly Graphics\" File Importer Maya" << endl;
@@ -3236,8 +3250,8 @@ MStatus GFGTranslator::reader(const MFileObject& file,
 	}
 
 	//DEBUG
-	//cout << "Printing Options which will be used..." << endl;
-	//PrintOptStruct();
+	cout << "Printing Options which will be used..." << endl;
+	PrintOptStruct();
 	//DEBUG_END
 
 	// Check Export Mode
@@ -3258,6 +3272,7 @@ MStatus GFGTranslator::writer(const MFileObject& file,
 							  const MString& options,
 							  MPxFileTranslator::FileAccessMode mode)
 {
+	cout.rdbuf(cerr.rdbuf());
 	CheckErrorRAII r(errorList);
 
 	// Welcome Message
@@ -3299,8 +3314,8 @@ MStatus GFGTranslator::writer(const MFileObject& file,
 	}
 
 	//DEBUG
-	//cout << "Printing Options which will be used..." << endl;
-	//PrintOptStruct();
+	cout << "Printing Options which will be used..." << endl;
+	PrintOptStruct();
 	//DEBUG_END
 
 	// Add Root Node

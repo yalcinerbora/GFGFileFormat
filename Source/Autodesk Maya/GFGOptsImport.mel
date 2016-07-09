@@ -60,7 +60,7 @@ global proc int GFGOptsImport ( string $parent,
 		
 		separator -style "none" -h 10;
 		// Vertex Export
-		frameLayout -label "Vertex Component Export" -collapsable false -borderStyle "etchedIn"; 
+		frameLayout -label "Vertex Component Export" -collapsable false ; 
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				checkBox -label ("Import Normals") normOn;
 				checkBox -label ("Import UVs") uvOn;
@@ -71,19 +71,25 @@ global proc int GFGOptsImport ( string $parent,
 			setParent ..;
 		setParent ..;
 		// Materials
-		frameLayout -label "Material Import" -collapsable true -borderStyle "etchedIn"; 
+		frameLayout -label "Material Import" -collapsable true ; 
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				checkBox -label ("Import Materials") matOn;
 			setParent ..;
 		setParent ..;
 		// Skeleton
-		frameLayout -label "Skeleton Import" -collapsable true -borderStyle "etchedIn"; 
+		frameLayout -label "Skeleton Import" -collapsable true ; 
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				checkBox -label ("Import Skeleton") skelOn;
 			setParent ..;
 		setParent ..;
+		// Animation
+		frameLayout -label "Animation Import" -collapsable true ; 
+			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
+				checkBox -label ("Import Animation") animOn;
+			setParent ..;
+		setParent ..;
 		// Hierarchy
-		frameLayout -label "Hierarchy Import" -collapsable true -borderStyle "etchedIn"; 
+		frameLayout -label "Hierarchy Import" -collapsable true ; 
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				checkBox -label ("Import Hierarchy") hierOn;
 			setParent ..;
@@ -215,6 +221,18 @@ global proc int GFGOptsImport ( string $parent,
 						checkBox -e -v true skelOn;
 					}
 				}
+				// Import Animation
+				else if ($optionBreakDown[0] == "animOn") 
+				{
+					if ($optionBreakDown[1] == "0") 
+					{
+						checkBox -e -v false animOn;
+					} 
+					else 
+					{
+						checkBox -e -v true animOn;
+					}
+				}
 			}
 		}
 		$bResult = 1;
@@ -304,6 +322,15 @@ global proc int GFGOptsImport ( string $parent,
 		else 
 		{
 			$currentOptions = $currentOptions + ";skelOn=0";
+		}
+		// Animation Import
+		if (`checkBox -q -v animOn`)
+		{
+			$currentOptions = $currentOptions + ";animOn=1";
+		} 
+		else 
+		{
+			$currentOptions = $currentOptions + ";animOn=0";
 		}
 		eval($resultCallback+" \""+$currentOptions+"\"");
 		$bResult = 1;
