@@ -50,6 +50,7 @@ Author(s):
 #include "GFGTranslatorMaya.h"
 #include "GFG/GFGVertexElementTypes.h"
 #include "GFGMayaGraphIterator.h"
+#include "GFGMayaAnimation.h"
 
 const char* GFGTranslator::pluginNameImport = "GFG_import";
 const char* GFGTranslator::pluginNameExport = "GFG_export";
@@ -1076,6 +1077,22 @@ bool GFGTranslator::ImportSkeleton(const MString& skeletonName,
 	const std::vector<GFGBone>& skeleton = gfgLoader.Header().skeletons[skeletonIndex].bones;
 	const std::vector<GFGTransform> boneTransforms = gfgLoader.Header().bonetransformData.transforms;
 
+	// Animation
+	// TODO: supports only one animation
+	std::vector<uint8_t> data;
+	bool hasNoAnim = false;
+	if(gfgOptions.animOn)
+	{
+		// Fetch Anim
+		uint32_t animIndex = 0;
+		for(const GFGAnimationHeader& anim : gfgLoader.Header().animations)
+		{
+			if(anim.skeletonIndex == skeletonIndex) break;
+			animIndex++;
+		}
+		if(animIndex == gfgLoader.Header().animationList.nodeAmount) hasNoAnim = true;
+	}
+
 	MDagModifier dagModifier;
 	MObjectArray& joints = importedSkeletons[skeletonIndex];
 	uint32_t index = -1;
@@ -1117,6 +1134,12 @@ bool GFGTranslator::ImportSkeleton(const MString& skeletonName,
 		dagModifier.commandToExecute("setAttr \"" + boneName + ".radius\" 0.18");
 		dagModifier.doIt();
 		GFGToMaya::Transform(transform, boneTransforms.at(bone.transformIndex));
+
+		// Animation
+		if(gfgOptions.animOn)
+		{
+			// Fetch Anim from already laid out data
+		}
 
 		joints.append(node);
 	}
@@ -2683,14 +2706,30 @@ MStatus GFGTranslator::ExportSkeleton(const MDagPath& root, bool inSelectionList
 	skeletonExport.push_back(inSelectionList);
 
 	// Send to File
+	uint32_t skelId = 0;
 	if(gfgOptions.skelOn && inSelectionList)
 	{
-		gfgExporter.AddSkeleton(parentIndices, currenSkelTransforms);
-		if(gfgOptions.animOn)
-		{
-			// Export Animation
-			//gfgExporter.AddAnimation();
-		}
+		skelId = gfgExporter.AddSkeleton(parentIndices, currenSkelTransforms);
+	}
+
+	// Animation Export
+	if(gfgOptions.animOn)
+	{
+		GFGMayaAnimationExport anim(skelList);
+		anim.FetchDataFromMaya(gfgOptions.animType,
+							   gfgOptions.animLayout,
+							   gfgOptions.quatLayout);
+
+		auto data = anim.LayoutData(gfgOptions.animLayout, 
+									gfgOptions.animType,
+									gfgOptions.animInterp);
+		gfgExporter.AddAnimation(gfgOptions.animLayout,
+								 gfgOptions.animType,
+								 gfgOptions.animInterp,
+								 gfgOptions.quatLayout,
+								 skelId,
+								 anim.KeyCount(),
+								 data);
 	}
 	return MStatus::kSuccess;
 }

@@ -7,12 +7,14 @@ size_t GFGFileLoader::EmptyHeaderSize =
 	sizeof(uint32_t) +			// Mesh List Size
 	sizeof(uint32_t) +			// Material List Size	
 	sizeof(uint32_t) +			// Skeleton List Size
+	sizeof(uint32_t) +			// Animation List Size
 	sizeof(uint32_t) +			// Secene Hierarcy Size
 	sizeof(uint32_t) +			// meshMatCon Size
 	sizeof(uint32_t) +			// skelMeshCon Size
 	0 +							// meshes
 	0 +							// materials
 	0 +							// skeletons
+	0 +							// animations
 	sizeof(uint32_t) +			// Transform Data Size
 	sizeof(uint32_t);			// Skeleton Transform Data Size
 
@@ -380,7 +382,7 @@ GFGFileError GFGFileLoader::AllMaterialUniformData(uint8_t data[])
 	return GFGFileError::OK;
 }
 
-GFGFileError GFGFileLoader::AnimationKeyframeData(GFGTransform data[], uint32_t animIndex)
+GFGFileError GFGFileLoader::AnimationKeyframeData(uint8_t data[], uint32_t animIndex)
 {
 	assert(animIndex < header.animationList.nodeAmount);
 	assert(valid);
@@ -393,7 +395,7 @@ GFGFileError GFGFileLoader::AnimationKeyframeData(GFGTransform data[], uint32_t 
 	return GFGFileError::OK;
 }
 
-GFGFileError GFGFileLoader::AllAnimationKeyframeData(GFGTransform data[])
+GFGFileError GFGFileLoader::AllAnimationKeyframeData(uint8_t data[])
 {
 	assert(valid);
 	if(header.headerSize + header.animations[0].dataStart >= reader->GetFileSize())

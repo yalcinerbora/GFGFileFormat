@@ -75,12 +75,12 @@ GFGAddMeshResult GFGFileExporter::AddMesh(const GFGTransform& transform,
 }
 
 uint32_t GFGFileExporter::AddMesh(uint32_t parent,
-								const std::vector<GFGVertexComponent>& headerComponent,
-								const GFGMeshHeaderCore& headerBase,
-								const std::vector<uint8_t>& vertexData,
-								const std::vector<uint8_t>* indexData,
-								const std::vector<GFGMeshMatPair>* materialPairings,
-								const std::vector<GFGMeshSkelPair>* skeletonPairings)
+								  const std::vector<GFGVertexComponent>& headerComponent,
+								  const GFGMeshHeaderCore& headerBase,
+								  const std::vector<uint8_t>& vertexData,
+								  const std::vector<uint8_t>* indexData,
+								  const std::vector<GFGMeshMatPair>* materialPairings,
+								  const std::vector<GFGMeshSkelPair>* skeletonPairings)
 {
 	// Add mesh
 	gfgHeader.meshes.emplace_back

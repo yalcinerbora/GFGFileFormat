@@ -12,25 +12,26 @@ https://github.com/yalcinerbora/GFGFileFormat/blob/master/LICENSE
 #define __GFG_MAYAANIMATION_H__
 
 #include "GFG/GFGFileExporter.h"
+#include "GFG/GFGFileLoader.h"
 #include <maya/MFnAnimCurve.h>
 #include <maya/MQuaternion.h>
 #include <vector>
 #include <array>
 
-class GFGMayaAnimation
+enum class AnimCurveType
+{
+	ROT_X,
+	ROT_Y,
+	ROT_Z,
+
+	TRANS_X,
+	TRANS_Y,
+	TRANS_Z
+};
+
+class GFGMayaAnimationExport
 {
 	private:
-		enum class AnimCurveType
-		{
-			ROT_X,
-			ROT_Y,
-			ROT_Z,
-
-			TRANS_X,
-			TRANS_Y,
-			TRANS_Z
-		};
-
 		const MObjectArray&								skeleton;
 		std::vector<std::vector<std::array<float, 4>>>	rotations;
 		std::vector<std::array<float, 3>>				hipTranslation;
@@ -44,13 +45,32 @@ class GFGMayaAnimation
 
 	public:
 		// Constructors & Destructor
-									GFGMayaAnimation(const MObjectArray& skeleton);
+									GFGMayaAnimationExport(const MObjectArray& skeleton);
 		
 		void						FetchDataFromMaya(GFGAnimType, GFGAnimationLayout, GFGQuatLayout);
 		std::vector<uint8_t>		LayoutData(GFGAnimationLayout,
 											   GFGAnimType,
 											   GFGQuatInterpType);
+		uint32_t					KeyCount() const;
 					
 		
+};
+
+class GFGMayaAnimationImport
+{
+	private:
+		std::vector<uint8_t>	data;
+		GFGAnimationHeader		animHeader;
+
+	protected:
+
+	public:
+		// Constrcutor & Destructor
+								GFGMayaAnimationImport(GFGFileLoader&, 
+													   uint32_t animIndex);
+
+		void					SortData(std::vector<std::vector<MEulerRotation>>& rotations,
+										 std::vector<std::array<float, 3>>& hipTranslation,
+										 std::vector<float>& timings);
 };
 #endif //__GFG_MAYAANIMATION_H__
