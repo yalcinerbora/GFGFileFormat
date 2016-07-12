@@ -42,9 +42,10 @@ enum class GFGAnimationLayout : uint32_t
 	// M is number of keys
 	// N is number of joints
 	// T is key time (in seconds)
+	// HT is hip translate
 	// If has translation, those values will be available
-	KEYS_OF_BONES,	// K0(T0, B0 --- BN), K1(T1, B0 --- BN), .... KM(TM, B0 --- BN)
-	BONES_OF_KEYS	// (T0 --- TM), B0(K0 --- KM), B1(K0 --- KM), .... BN(K0 --- KM)
+	KEYS_OF_BONES,	// (T0 --- TM), B0(HT0 --- HTM), B0(K0 --- KM), B1(K0 --- KM), .... BN(K0 --- KM)
+	BONES_OF_KEYS	// K0(T0, HT0, B0 --- BN), K1(T1, HT1, B0 --- BN), .... KM(TM, HTM, B0 --- BN)
 };
 
 struct GFGAnimationHeader

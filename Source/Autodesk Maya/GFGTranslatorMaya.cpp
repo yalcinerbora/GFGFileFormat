@@ -40,6 +40,8 @@ Author(s):
 #include <maya/MCommandResult.h>
 #include <maya/MItMeshFaceVertex.h>
 #include <maya/MFnSingleIndexedComponent.h>
+#include <maya/MDGModifier.h>
+#include <maya/MEulerRotation.h>
 
 #include <string.h>
 #include <cassert>
@@ -50,7 +52,6 @@ Author(s):
 #include "GFGTranslatorMaya.h"
 #include "GFG/GFGVertexElementTypes.h"
 #include "GFGMayaGraphIterator.h"
-#include "GFGMayaAnimation.h"
 
 const char* GFGTranslator::pluginNameImport = "GFG_import";
 const char* GFGTranslator::pluginNameExport = "GFG_export";
@@ -1079,18 +1080,29 @@ bool GFGTranslator::ImportSkeleton(const MString& skeletonName,
 
 	// Animation
 	// TODO: supports only one animation
-	std::vector<uint8_t> data;
-	bool hasNoAnim = false;
+	bool hasAnim = false;
+	uint32_t animIndex = 0;
+	std::vector<std::vector<MEulerRotation>> rotations;
+	std::vector<float> timings;
+	std::vector<std::array<float, 3>> hipTranslation;
 	if(gfgOptions.animOn)
 	{
 		// Fetch Anim
-		uint32_t animIndex = 0;
 		for(const GFGAnimationHeader& anim : gfgLoader.Header().animations)
 		{
 			if(anim.skeletonIndex == skeletonIndex) break;
 			animIndex++;
 		}
-		if(animIndex == gfgLoader.Header().animationList.nodeAmount) hasNoAnim = true;
+		if(animIndex != gfgLoader.Header().animationList.nodeAmount)
+		{
+			hasAnim = true;
+			GFGMayaAnimationImport animLoader(gfgLoader, animIndex);
+			animLoader.SortData(rotations, hipTranslation, timings);
+
+			////DEBUG
+			//animLoader.PrintFormattedData(rotations, hipTranslation, timings);
+			//animLoader.PrintByteArray();
+		}
 	}
 
 	MDagModifier dagModifier;
@@ -1136,16 +1148,104 @@ bool GFGTranslator::ImportSkeleton(const MString& skeletonName,
 		GFGToMaya::Transform(transform, boneTransforms.at(bone.transformIndex));
 
 		// Animation
-		if(gfgOptions.animOn)
+		if(gfgOptions.animOn && hasAnim)
 		{
-			// Fetch Anim from already laid out data
-		}
+			MDGModifier dgModif;
+			if(hipTranslation.size() != 0 && index == 0)
+			{
+				MObject hipTransX = dgModif.createNode("animCurveTL");
+				MObject hipTransY = dgModif.createNode("animCurveTL");
+				MObject hipTransZ = dgModif.createNode("animCurveTL");
+				dgModif.doIt();
 
+				MFnDependencyNode(hipTransX).setName(boneName + "_translateX");
+				MFnDependencyNode(hipTransY).setName(boneName + "_translateY");
+				MFnDependencyNode(hipTransZ).setName(boneName + "_translateZ");
+
+				MFnAnimCurve animCurveX(hipTransX);
+				MFnAnimCurve animCurveY(hipTransY);
+				MFnAnimCurve animCurveZ(hipTransZ);
+				uint32_t i = 0;
+				for(const std::array<float, 3>& trans : hipTranslation)
+				{
+					animCurveX.addKey(MTime(timings[i], MTime::kSeconds), trans[0]);
+					animCurveY.addKey(MTime(timings[i], MTime::kSeconds), trans[1]);
+					animCurveZ.addKey(MTime(timings[i], MTime::kSeconds), trans[2]);
+					i++;
+				}
+
+				MatchJointWithCurve(hipTransX, node, GFGMayaAnimCurveType::TRANS_X);
+				MatchJointWithCurve(hipTransY, node, GFGMayaAnimCurveType::TRANS_Y);
+				MatchJointWithCurve(hipTransZ, node, GFGMayaAnimCurveType::TRANS_Z);
+			}
+
+			
+			// For Each Bone in the Array				
+			MObject rotCurveX = dgModif.createNode("animCurveTA");
+			MObject rotCurveY = dgModif.createNode("animCurveTA");
+			MObject rotCurveZ = dgModif.createNode("animCurveTA");
+			dgModif.doIt();
+
+			MFnDependencyNode(rotCurveX).setName(boneName + "_rotateX");
+			MFnDependencyNode(rotCurveY).setName(boneName + "_rotateY");
+			MFnDependencyNode(rotCurveZ).setName(boneName + "_rotateZ");
+
+			MFnAnimCurve animCurveX(rotCurveX);
+			MFnAnimCurve animCurveY(rotCurveY);
+			MFnAnimCurve animCurveZ(rotCurveZ);
+
+			uint32_t i = 0;
+			for(const MEulerRotation& rot : rotations[index])
+			{
+				animCurveX.addKey(MTime(timings[i], MTime::kSeconds), rot.x);
+				animCurveY.addKey(MTime(timings[i], MTime::kSeconds), rot.y);
+				animCurveZ.addKey(MTime(timings[i], MTime::kSeconds), rot.z);
+				i++;
+			}
+
+			MatchJointWithCurve(rotCurveX, node, GFGMayaAnimCurveType::ROT_X);
+			MatchJointWithCurve(rotCurveY, node, GFGMayaAnimCurveType::ROT_Y);
+			MatchJointWithCurve(rotCurveZ, node, GFGMayaAnimCurveType::ROT_Z);
+		}
 		joints.append(node);
 	}
 	return true;
 }
 
+bool GFGTranslator::MatchJointWithCurve(MObject& animCurve,
+										MObject& joint,
+										GFGMayaAnimCurveType type)
+{
+	MStatus status;
+	MFnDependencyNode curveDN(animCurve);
+	MPlug output = curveDN.findPlug("output", true, &status);
+	if(status != MStatus::kSuccess)
+	{
+		cerr << "Unable to Find output plug on " << curveDN.name() << endl;
+		return false;
+	}
+
+	MString connectionName = CurveTypeName(type);
+	MFnDependencyNode jointDN(joint);
+
+	MPlug input = jointDN.findPlug(connectionName, true, &status);
+	if(status != MStatus::kSuccess)
+	{
+		cerr << "Unable to Find " << connectionName << " plug on " << curveDN.name() << endl;
+		return false;
+	}
+
+
+	MDGModifier dgModif;
+	dgModif.connect(output, input);
+	status = dgModif.doIt();
+	if(status != MStatus::kSuccess)
+	{
+		cerr << "Unable to Connect Plugs..." << endl;
+		return false;
+	}
+	return true;
+}
 
 MStatus GFGTranslator::ExportSelected(std::ofstream& fileStream)
 {
@@ -2715,14 +2815,13 @@ MStatus GFGTranslator::ExportSkeleton(const MDagPath& root, bool inSelectionList
 	// Animation Export
 	if(gfgOptions.animOn)
 	{
-		GFGMayaAnimationExport anim(skelList);
-		anim.FetchDataFromMaya(gfgOptions.animType,
-							   gfgOptions.animLayout,
-							   gfgOptions.quatLayout);
-
-		auto data = anim.LayoutData(gfgOptions.animLayout, 
+		GFGMayaAnimationExport anim(skelList,
 									gfgOptions.animType,
+									gfgOptions.animLayout,
+									gfgOptions.quatLayout,
 									gfgOptions.animInterp);
+		anim.FetchDataFromMaya();
+		auto data = anim.LayoutData();
 		gfgExporter.AddAnimation(gfgOptions.animLayout,
 								 gfgOptions.animType,
 								 gfgOptions.animInterp,
@@ -2730,6 +2829,10 @@ MStatus GFGTranslator::ExportSkeleton(const MDagPath& root, bool inSelectionList
 								 skelId,
 								 anim.KeyCount(),
 								 data);
+
+		////DEBUG
+		//anim.PrintFormattedData();
+		//anim.PrintByteArray(data);
 	}
 	return MStatus::kSuccess;
 }

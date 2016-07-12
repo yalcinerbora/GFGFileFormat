@@ -519,15 +519,28 @@ uint64_t GFGFileLoader::AnimationKeyframeDataSize(uint32_t animIndex) const
 {
 	assert(animIndex < header.animationList.nodeAmount);
 	assert(valid);
-	
-	return header.animations[animIndex].keyCount * sizeof(GFGTransform);
+
+	uint64_t dataSize = header.animations[animIndex].keyCount * 
+						sizeof(float[4]) *
+						header.skeletons[header.animations[animIndex].skeletonIndex].boneAmount;
+	dataSize += header.animations[animIndex].keyCount * sizeof(float);				// Time
+
+	if(header.animations[animIndex].type == GFGAnimType::WITH_HIP_TRANSLATE)
+		dataSize += header.animations[animIndex].keyCount * sizeof(float[3]);		// Hip Translate for each Key
+	return dataSize;
 }
 
 uint64_t GFGFileLoader::AllAnimationKeyframeDataSize()const
 {
 	assert(valid);
-
+	// TODO: Make this O(1)
+	uint64_t result = 0;
 	if(header.animationList.nodeAmount != 0)
-		return reader->GetFileSize() - header.animations[0].keyCount * sizeof(GFGTransform);
-	return 0;
+	{
+		for(int i = 0; i < header.animations.size(); i++)
+		{
+			result += AnimationKeyframeDataSize(i);
+		}
+	}
+	return result;
 }

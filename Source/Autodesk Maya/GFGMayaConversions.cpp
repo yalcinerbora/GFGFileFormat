@@ -630,9 +630,6 @@ void MayaToGFG::Transform(GFGTransform& gfgTransform, const MObject& mayaTransfo
 	// Parent Maybe a joint
 	// Joints has rotate orient that users frequently change
 	// We need to take that into consideration aswell
-	double jointOrientX = 0.0;
-	double jointOrientY = 0.0;
-	double jointOrientZ = 0.0;
 	MStatus status;
 	MFnIkJoint jointTransform(mayaTransformNode, &status);
 	if(status == MStatus::kSuccess)

@@ -157,7 +157,9 @@ void GFGHeader::CalculateDataOffsets()
 	for(GFGAnimationHeader& animation : animations)
 	{
 		animation.dataStart = dataOffsetPtr;
-		dataOffsetPtr += animation.keyCount * sizeof(float[4]) * skeletons[animation.skeletonIndex].boneAmount;
+		dataOffsetPtr += animation.keyCount * 
+						 sizeof(float[4]) * 
+						 skeletons[animation.skeletonIndex].boneAmount;
 		dataOffsetPtr += animation.keyCount * sizeof(float);				// Time
 
 		if(animation.type == GFGAnimType::WITH_HIP_TRANSLATE) 

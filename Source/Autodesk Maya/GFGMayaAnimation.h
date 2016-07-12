@@ -18,7 +18,7 @@ https://github.com/yalcinerbora/GFGFileFormat/blob/master/LICENSE
 #include <vector>
 #include <array>
 
-enum class AnimCurveType
+enum class GFGMayaAnimCurveType
 {
 	ROT_X,
 	ROT_Y,
@@ -29,9 +29,16 @@ enum class AnimCurveType
 	TRANS_Z
 };
 
+extern MString CurveTypeName(const GFGMayaAnimCurveType&);
+
 class GFGMayaAnimationExport
 {
 	private:
+		GFGAnimType							animType;
+		GFGAnimationLayout					animLayout;
+		GFGQuatLayout						quatLayout;
+		GFGQuatInterpType					quatInterp;
+
 		const MObjectArray&								skeleton;
 		std::vector<std::vector<std::array<float, 4>>>	rotations;
 		std::vector<std::array<float, 3>>				hipTranslation;
@@ -39,20 +46,23 @@ class GFGMayaAnimationExport
 
 		uint32_t								keyCount;
 
-		MObject		 							JointToAnimCurve(AnimCurveType, const MObject& joint);
-
+		MObject		 							JointToAnimCurve(GFGMayaAnimCurveType, const MObject& joint);
+		
 	protected:
 
 	public:
 		// Constructors & Destructor
-									GFGMayaAnimationExport(const MObjectArray& skeleton);
+									GFGMayaAnimationExport(const MObjectArray& skeleton,
+														   GFGAnimType,
+														   GFGAnimationLayout,
+														   GFGQuatLayout,
+														   GFGQuatInterpType);
 		
-		void						FetchDataFromMaya(GFGAnimType, GFGAnimationLayout, GFGQuatLayout);
-		std::vector<uint8_t>		LayoutData(GFGAnimationLayout,
-											   GFGAnimType,
-											   GFGQuatInterpType);
+		void						FetchDataFromMaya();
+		std::vector<uint8_t>		LayoutData();
 		uint32_t					KeyCount() const;
-					
+		void						PrintFormattedData() const;
+		void						PrintByteArray(const std::vector<uint8_t>&) const;
 		
 };
 
@@ -61,6 +71,7 @@ class GFGMayaAnimationImport
 	private:
 		std::vector<uint8_t>	data;
 		GFGAnimationHeader		animHeader;
+		uint32_t				boneCount;
 
 	protected:
 
@@ -71,6 +82,10 @@ class GFGMayaAnimationImport
 
 		void					SortData(std::vector<std::vector<MEulerRotation>>& rotations,
 										 std::vector<std::array<float, 3>>& hipTranslation,
-										 std::vector<float>& timings);
+										 std::vector<float>& timings) const;
+		void					PrintFormattedData(const std::vector<std::vector<MEulerRotation>>& rotations,
+												   const std::vector<std::array<float, 3>>& hipTranslation,
+												   const std::vector<float>& timings) const;
+		void					PrintByteArray() const;
 };
 #endif //__GFG_MAYAANIMATION_H__

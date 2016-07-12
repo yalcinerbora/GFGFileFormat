@@ -21,6 +21,7 @@ https://github.com/yalcinerbora/GFGFileFormat/blob/master/LICENSE
 #include "GFGMayaConversions.h"
 #include "GFGMayaStructures.h"
 #include "GFGMayaOptions.h"
+#include "GFGMayaAnimation.h"
 
 using GFGMayaIndexLookup = std::vector<std::map<uint32_t, uint32_t>>;
 
@@ -61,6 +62,9 @@ class GFGTranslator : public MPxFileTranslator
 										   uint32_t meshIndex);
 		bool					ImportSkeleton(const MString& skeletonName,
 												uint32_t skeletonIndex);
+		bool					MatchJointWithCurve(MObject& animCurve,
+													MObject& joint,
+													GFGMayaAnimCurveType);
 
 		// Maya Utility
 		void					ResetForExport();
