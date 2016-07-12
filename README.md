@@ -27,7 +27,7 @@ and the GPU Memory. It can literally take one memcopy to put your vertex data to
 - Does not support(store) pivot, pivot position
 - Material is only defined to import back to modelling software if necessary. It is nowhere near robust since, it favours bandwidth over quality (if you use packed data)
 - No naming support (Objects have unique ids instead of names)
-- Very simple animation storing, Animation only holds bone(joint) transform key frames.
+- Very simple animation storing, Animation only holds bone(joint) rotations and hip(root) translation key frames.
 - Lossy data when importing back to the modelling software if data type you choose lossy.
 
 ## Helpful Links
@@ -43,13 +43,12 @@ Installation Instructions can be found in this link [Installation Guide][6]
 
 ## TODO List:
 
-- Implement Animation Export (Only Supports Material, Mesh and Skeleton at the moment)
 - Add Vertex Morph Target Animation Support
 - UE4 Importer
 - Porting to Linux (to GCC), and Linux Version of Maya
 - GFG File opener GUI program
 - None of the data types tested properly. (only tested FLOAT_3 data type)
-- Make Implementation of the new data types simple and easy. So that people pull request their data
+- Make Implementation of the new data types simple and easy, so that people pull request their new data format
 - Above statement also goes for the new material types.
 - Blender Importer/Exporter
 - Autodesk 3DMax Importer/Exporter
