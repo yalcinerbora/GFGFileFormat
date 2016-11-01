@@ -183,7 +183,7 @@ uint32_t GFGFileExporter::AddNode(const GFGTransform& transform,
 {
 	gfgHeader.transformData.transforms.emplace_back(transform);
 	uint32_t transformIndex = static_cast<uint32_t>(gfgHeader.transformData.transforms.size() - 1);
-	gfgHeader.sceneHierarchy.nodes.emplace_back(GFGNode {parent, transformIndex, -1});
+	gfgHeader.sceneHierarchy.nodes.emplace_back(GFGNode {parent, transformIndex, 0xFFFFFFFF});
 	return  static_cast<uint32_t>(gfgHeader.sceneHierarchy.nodes.size() - 1);
 }
 

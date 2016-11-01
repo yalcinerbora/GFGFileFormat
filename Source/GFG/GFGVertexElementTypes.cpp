@@ -85,7 +85,7 @@ bool GFGNormal::IsCompatible(GFGDataType t)
 		case GFGDataType::NORM16_3:
 		case GFGDataType::NORM32_2:
 		case GFGDataType::NORM32_3:
-		case GFGDataType::INT_2_10_10_10:
+		case GFGDataType::NORM_2_10_10_10:
 		case GFGDataType::CUSTOM_1_15N_16N:
 			return true;
 		default:
@@ -146,7 +146,7 @@ bool GFGNormal::ConvertData(uint8_t data[], size_t dataSize,
 		case GFGDataType::NORM32_3:
 			GFGConversions::DoubleToNorm32V(data, dataSize, normal, 3);
 			break;
-		case GFGDataType::INT_2_10_10_10:
+		case GFGDataType::NORM_2_10_10_10:
 		{
 			assert(dataSize >= sizeof(uint32_t));
 			uint32_t temp;
@@ -222,7 +222,7 @@ bool GFGNormal::UnConvertData(double normal[3], size_t dataSize,
 		case GFGDataType::NORM32_3:
 			GFGConversions::Norm32ToDoubleV(normal, dataSize, data, 3);
 			break;
-		case GFGDataType::INT_2_10_10_10:
+		case GFGDataType::NORM_2_10_10_10:
 		{
 			assert(dataSize >= sizeof(uint32_t));
 			uint32_t temp;
@@ -279,7 +279,7 @@ bool GFGTangent::ConvertData(uint8_t data[], size_t dataSize,
 		case GFGDataType::NORM16_3:
 		case GFGDataType::NORM32_2:
 		case GFGDataType::NORM32_3:
-		case GFGDataType::INT_2_10_10_10:
+		case GFGDataType::NORM_2_10_10_10:
 		case GFGDataType::CUSTOM_1_15N_16N:
 			return GFGNormal::ConvertData(data, dataSize,
 										  tangent, type,
@@ -322,7 +322,7 @@ bool GFGBinormal::ConvertData(uint8_t data[], size_t dataSize,
 		case GFGDataType::NORM16_3:
 		case GFGDataType::NORM32_2:
 		case GFGDataType::NORM32_3:
-		case GFGDataType::INT_2_10_10_10:
+		case GFGDataType::NORM_2_10_10_10:
 		case GFGDataType::CUSTOM_1_15N_16N:
 			return GFGNormal::ConvertData(data, dataSize,
 										  bitangent, type,
@@ -346,8 +346,8 @@ bool GFGUV::IsCompatible(GFGDataType t)
 		case GFGDataType::UNORM8_2:
 		case GFGDataType::UNORM16_2:
 		case GFGDataType::UNORM32_2:
-		case GFGDataType::INT_2_10_10_10:
-		case GFGDataType::UINT_2_10_10_10:
+		case GFGDataType::NORM_2_10_10_10:
+		case GFGDataType::UNORM_2_10_10_10:
 			return true;
 		default:
 			return false;
@@ -392,7 +392,7 @@ bool GFGUV::ConvertData(uint8_t data[], size_t dataSize,
 		case GFGDataType::UNORM32_2:
 			GFGConversions::DoubleToUnorm32V(data, dataSize, uv, 2);
 			break;
-		case GFGDataType::INT_2_10_10_10:
+		case GFGDataType::NORM_2_10_10_10:
 		{
 			double temp[4];
 			assert(dataSize >= sizeof(int32_t));
@@ -403,7 +403,7 @@ bool GFGUV::ConvertData(uint8_t data[], size_t dataSize,
 			std::memcpy(data, &result, sizeof(int32_t));
 			break;
 		}
-		case GFGDataType::UINT_2_10_10_10:
+		case GFGDataType::UNORM_2_10_10_10:
 		{
 			double temp[4];
 			assert(dataSize >= sizeof(uint32_t));
@@ -457,7 +457,7 @@ bool GFGUV::UnConvertData(double uv[2], size_t dataSize,
 		case GFGDataType::UNORM32_2:
 			GFGConversions::UNorm32ToDoubleV(uv, dataSize, data, 2);
 			break;
-		case GFGDataType::INT_2_10_10_10:
+		case GFGDataType::NORM_2_10_10_10:
 		{
 			double uvTemp[4];
 			int32_t temp;
@@ -467,7 +467,7 @@ bool GFGUV::UnConvertData(double uv[2], size_t dataSize,
 			std::memcpy(uv, uvTemp, sizeof(double) * 2);
 			break;
 		}
-		case GFGDataType::UINT_2_10_10_10:
+		case GFGDataType::UNORM_2_10_10_10:
 		{
 			double uvTemp[4];
 			uint32_t temp;
@@ -937,7 +937,7 @@ bool GFGWeightIndex::IsCompatible(GFGDataType t, unsigned int maxWeightInfluence
 			return maxWeightInfluence <= 3;
 		case GFGDataType::UINT32_4:
 			return maxWeightInfluence <= 4;
-		case GFGDataType::UINT_2_10_10_10:
+		case GFGDataType::UNORM_2_10_10_10:
 			return maxWeightInfluence <= 3;
 		case GFGDataType::UINT16_2_4:
 			return maxWeightInfluence <= 8;
@@ -1027,7 +1027,7 @@ bool GFGWeightIndex::ConvertData(uint8_t data[], size_t dataSize,
 			GFGConversions::UIntToUInt32V(data, dataSize, wIndex, maxWeightInfluence);
 			break;
 		}
-		case GFGDataType::UINT_2_10_10_10:
+		case GFGDataType::UNORM_2_10_10_10:
 		{
 			assert(maxWeightInfluence <= 3);
 			assert(dataSize >= sizeof(uint32_t));
@@ -1133,7 +1133,7 @@ bool GFGWeightIndex::UnConvertData(unsigned int wIndex[],
 			GFGConversions::UInt32ToUIntV(wIndex, dataSize, data, maxWeightInfluence);
 			break;
 		}
-		case GFGDataType::UINT_2_10_10_10:
+		case GFGDataType::UNORM_2_10_10_10:
 		{;
 			uint32_t temp;
 			std::memcpy(&temp, &data, sizeof(uint32_t));
@@ -1170,7 +1170,7 @@ bool GFGColor::IsCompatible(GFGDataType t)
 		case GFGDataType::UNORM8_3:
 		case GFGDataType::UNORM16_3:
 		case GFGDataType::UNORM32_3:
-		case GFGDataType::UINT_2_10_10_10:
+		case GFGDataType::UNORM_2_10_10_10:
 		case GFGDataType::UINT_10F_11F_11F:
 			return true;
 		default:
@@ -1207,7 +1207,7 @@ bool GFGColor::ConvertData(uint8_t data[], size_t dataSize,
 		case GFGDataType::UNORM32_3:
 			GFGConversions::DoubleToUnorm32V(data, dataSize, color, 3);
 			break;
-		case GFGDataType::UINT_2_10_10_10:
+		case GFGDataType::UNORM_2_10_10_10:
 		{
 			assert(dataSize >= sizeof(uint32_t));
 			double tempIn[4];
@@ -1260,7 +1260,7 @@ bool GFGColor::UnConvertData(double color[3], size_t dataSize,
 		case GFGDataType::UNORM32_3:
 			GFGConversions::UNorm32ToDoubleV(color, dataSize, data, 3);
 			break;
-		case GFGDataType::UINT_2_10_10_10:
+		case GFGDataType::UNORM_2_10_10_10:
 		{
 			assert(dataSize >= sizeof(uint32_t));
 			double tempIn[4];

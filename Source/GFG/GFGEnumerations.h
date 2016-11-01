@@ -129,8 +129,8 @@ enum class GFGDataType : uint32_t
 	UNORM32_4,
 
 	// Packed Data Types
-	INT_2_10_10_10,		// Packed Data, LSB to MSB is 10 to 2, unpacked format is 4 normalized integers
-	UINT_2_10_10_10,	// Packed Data, LSB to MSB is 10 to 2, unpacked format is 4 unsigned normalized integers
+	NORM_2_10_10_10,	// Packed Data, LSB to MSB is 10 to 2, unpacked format is 4 normalized integers
+	UNORM_2_10_10_10,	// Packed Data, LSB to MSB is 10 to 2, unpacked format is 4 unsigned normalized integers
 
 	// https://www.opengl.org/registry/specs/EXT/packed_float.txt
 	UINT_10F_11F_11F,	// Packed Data, LSB to MSB is 11F to 10F, unpacked format is 3 floating point numbers
@@ -175,6 +175,10 @@ enum class GFGDataType : uint32_t
 						// holds 8 16 bit integer values
 						// OGL Feed : use GL_INT with four component
 
+	// Voxel Related	
+	UINT_2_10_10_10,	// Packed Data, LSB to MSB is 10 to 2, unpacked format is 3 integers between 0 1023, Last 2 bit is unused
+	//------------------------------------//
+	//------------------------------------//
 	END					// For Static Asserting the size array
 };
 
@@ -254,8 +258,8 @@ static std::ostream& operator<<(std::ostream& os, const GFGDataType& dt)
 		"UNORM32_2",
 		"UNORM32_3",
 		"UNORM32_4",
-		"INT_2_10_10_10",
-		"UINT_2_10_10_10",
+		"NORM_2_10_10_10",
+		"UNORM_2_10_10_10",
 		"UINT_10F_11F_11F",
 		"CUSTOM_1_15F_16F",
 		"CUSTOM_TANG_2F_H",
@@ -263,9 +267,12 @@ static std::ostream& operator<<(std::ostream& os, const GFGDataType& dt)
 		"UNORM16_2_4",
 		"UINT8_4_4",
 		"UINT16_2_4",
+		"UINT_2_10_10_10",
 		"END"
 	};
 	return os << values[static_cast<int>(dt)];
+	static_assert((sizeof(values) / sizeof(char*)) == (static_cast<size_t>(GFGDataType::END) + 1),
+				  "\'GFGDataType\' enum and its size array does not have same amount of elements.");
 }
 
 enum class GFGIndexDataType : uint32_t
@@ -432,6 +439,10 @@ static const size_t GFGDataTypeByteSize[]
 									// holds 16 8 bit integer values
 	16,		//UINT16_2_4,			// 16 bit integer index in a 4 component 32 bit type
 									// holds 8 16 bit integer values
+									// Voxel Related	
+	4		//UINT_2_10_10_10,		// Packed Data, LSB to MSB is 10 to 2, unpacked format is 3 integers between 0 1023, Last 2 bit is unused
+	//------------------------------------//
+	//------------------------------------//
 };
 
 static_assert((sizeof(GFGDataTypeByteSize) / sizeof(size_t)) == static_cast<size_t>(GFGDataType::END), 

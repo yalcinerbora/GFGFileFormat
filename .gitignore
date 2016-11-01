@@ -48,3 +48,5 @@ Bin/
 
 !Lib/**/*.pch
 *.user
+*.db
+*.opendb

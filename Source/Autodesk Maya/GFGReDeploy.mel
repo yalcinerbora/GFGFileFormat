@@ -1,15 +1,15 @@
 global proc string GFGReDeploy (string $type)
 {
-	string $gfgOptsIDest = "C:/Program Files/Autodesk/Maya2016/scripts/others/GFGOptsImport.mel";
+	string $gfgOptsIDest = "C:/Program Files/Autodesk/Maya2017/scripts/others/GFGOptsImport.mel";
 	string $gfgOptsISrc = "E:/Bora/Github/GFGFileFormat/Source/Autodesk Maya/GFGOptsImport.mel";
 	
-	string $gfgOptsEDest = "C:/Program Files/Autodesk/Maya2016/scripts/others/GFGOptsExport.mel";
+	string $gfgOptsEDest = "C:/Program Files/Autodesk/Maya2017/scripts/others/GFGOptsExport.mel";
 	string $gfgOptsESrc = "E:/Bora/Github/GFGFileFormat/Source/Autodesk Maya/GFGOptsExport.mel";
 	
-	string $gfgReDeployDest = "C:/Program Files/Autodesk/Maya2016/scripts/others/GFGReDeploy.mel";
+	string $gfgReDeployDest = "C:/Program Files/Autodesk/Maya2017/scripts/others/GFGReDeploy.mel";
 	string $gfgReDeploySrc = "E:/Bora/Github/GFGFileFormat/Source/Autodesk Maya/GFGReDeploy.mel";
 	
-	string $gfgErrWindowDest = "C:/Program Files/Autodesk/Maya2016/scripts/others/GFGErrorWindow.mel";
+	string $gfgErrWindowDest = "C:/Program Files/Autodesk/Maya2017/scripts/others/GFGErrorWindow.mel";
 	string $gfgErrWindowSrc = "E:/Bora/Github/GFGFileFormat/Source/Autodesk Maya/GFGErrorWindow.mel";
 
 	if(!`sysFile -copy $gfgOptsEDest $gfgOptsESrc`) return "Error Copy Opts Export";
@@ -24,10 +24,10 @@ global proc string GFGReDeploy (string $type)
 	if($type == "debug")
 	{
 		//DEBUG
-		string $destMLL = "C:/Program Files/Autodesk/Maya2016/bin/plug-ins/GFGMaya.mll";
+		string $destMLL = "C:/Program Files/Autodesk/Maya2017/bin/plug-ins/GFGMaya.mll";
 		string $srcMLL = "E:/Bora/Github/GFGFileFormat/Bin/Windows/Debug/GFGMaya.mll";
 
-		string $destPDB = "C:/Program Files/Autodesk/Maya2016/bin/plug-ins/GFGMaya.pdb";
+		string $destPDB = "C:/Program Files/Autodesk/Maya2017/bin/plug-ins/GFGMaya.pdb";
 		string $srcPDB = "E:/Bora/Github/GFGFileFormat/Bin/Windows/Debug/GFGMaya.pdb";
 		
 		unloadPlugin "GFGMaya.mll";
@@ -38,7 +38,7 @@ global proc string GFGReDeploy (string $type)
 	else if($type == "release")
 	{
 		//RELEASE
-		string $destMLL = "C:/Program Files/Autodesk/Maya2016/bin/plug-ins/GFGMaya.mll";
+		string $destMLL = "C:/Program Files/Autodesk/Maya2017/bin/plug-ins/GFGMaya.mll";
 		string $srcMLL = "E:/Bora/Github/GFGFileFormat/Bin/Windows/Release/GFGMaya.mll";
 
 		unloadPlugin "GFGMaya.mll";

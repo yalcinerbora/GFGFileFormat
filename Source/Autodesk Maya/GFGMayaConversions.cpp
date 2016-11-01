@@ -71,9 +71,9 @@ static void	GetDataFromPlugBumpMap(GFGMaterialHeader& gfgMat,
 
 						gfgMat.textureList.emplace_back(GFGTexturePath
 						{
-							0,						// Will be populated by the gfgLoader
-							GFGStringType::UTF8,	// Type
-							length + 1				// Size in bytes
+							0u,						            // Will be populated by the gfgLoader
+							GFGStringType::UTF8,	            // Type
+							static_cast<uint32_t>(length + 1)	// Size in bytes
 						});
 						filePathWritten = true;
 					}
@@ -135,9 +135,9 @@ static void GetDataFromPlugTexturePath(GFGMaterialHeader& gfgMat,
 
 				gfgMat.textureList.emplace_back(GFGTexturePath
 				{
-					0,						// Will be populated by the gfgLoader
-					GFGStringType::UTF8,	// Type
-					length + 1				// Size in bytes
+					0,						            // Will be populated by the gfgLoader
+					GFGStringType::UTF8,	            // Type
+					static_cast<uint32_t>(length + 1)   // Size in bytes
 				});
 				return;
 			}
