@@ -2,8 +2,8 @@
 #include <maya/MString.h>
 #include <maya/MStringArray.h>
 
-bool GFGMayaOptions::ParseOptionBool(bool& result, 
-									 const MStringArray& currentOption, 
+bool GFGMayaOptions::ParseOptionBool(bool& result,
+									 const MStringArray& currentOption,
 									 const char* optName)
 {
 	if(currentOption[0] == MString(optName) &&

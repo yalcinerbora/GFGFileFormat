@@ -47,7 +47,7 @@ class GFGMayaAnimationExport
 		uint32_t								keyCount;
 
 		MObject		 							JointToAnimCurve(GFGMayaAnimCurveType, const MObject& joint);
-		
+
 	protected:
 
 	public:
@@ -57,13 +57,13 @@ class GFGMayaAnimationExport
 														   GFGAnimationLayout,
 														   GFGQuatLayout,
 														   GFGQuatInterpType);
-		
+
 		void						FetchDataFromMaya();
 		std::vector<uint8_t>		LayoutData();
 		uint32_t					KeyCount() const;
 		void						PrintFormattedData() const;
 		void						PrintByteArray(const std::vector<uint8_t>&) const;
-		
+
 };
 
 class GFGMayaAnimationImport
@@ -77,7 +77,7 @@ class GFGMayaAnimationImport
 
 	public:
 		// Constrcutor & Destructor
-								GFGMayaAnimationImport(GFGFileLoader&, 
+								GFGMayaAnimationImport(GFGFileLoader&,
 													   uint32_t animIndex);
 
 		void					SortData(std::vector<std::vector<MEulerRotation>>& rotations,

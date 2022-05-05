@@ -50,3 +50,6 @@ Bin/
 *.user
 *.db
 *.opendb
+*.db-shm
+*.db-wal
+*.ipch

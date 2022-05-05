@@ -5,7 +5,7 @@ GFGTranslator Class
 
 Importer and Exporter for Maya
 
-For License refer to: 
+For License refer to:
 https://github.com/yalcinerbora/GFGFileFormat/blob/master/LICENSE
 */
 
@@ -23,6 +23,8 @@ https://github.com/yalcinerbora/GFGFileFormat/blob/master/LICENSE
 #include "GFGMayaOptions.h"
 #include "GFGMayaAnimation.h"
 
+#include <memory_resource>
+
 using GFGMayaIndexLookup = std::vector<std::map<uint32_t, uint32_t>>;
 
 class GFGTranslator : public MPxFileTranslator
@@ -33,11 +35,11 @@ class GFGTranslator : public MPxFileTranslator
 			private:
 				const MString& errList;
 			protected:
-			public: 
+			public:
 				CheckErrorRAII(const MString& s) : errList(s) {}
 				~CheckErrorRAII()
 				{
-					if(errList.length() != 0) 
+					if(errList.length() != 0)
 						MGlobal::executeCommand("GFGErrorWindow \"" + errList + "\"");
 				}
 		};
@@ -45,7 +47,7 @@ class GFGTranslator : public MPxFileTranslator
 		// Actual Import Export
 		MStatus					ExportSelected(std::ofstream&);
 		MStatus					ExportAll(std::ofstream&);
-		MStatus					ExportAllIterator(MItDag& dagIterator);	
+		MStatus					ExportAllIterator(MItDag& dagIterator);
 		MStatus					Import(std::ifstream&, const MString fileName);
 		MStatus					WriteGFGToFile(std::ofstream& fileStream);
 
@@ -95,9 +97,9 @@ class GFGTranslator : public MPxFileTranslator
 
 		// Debugging
 		void					PrintOptStruct() const;
-		void					PrintMeshInfo(const MDagPath& path, 
+		void					PrintMeshInfo(const MDagPath& path,
 											  const MFnMesh& mesh,
-											  unsigned int instanceNo, 
+											  unsigned int instanceNo,
 											  const MObjectArray& skinClusters,
 											  const MObjectArray& materials) const;
 		void					PrintAllGFGBlocks(const GFGHeader& header) const;
@@ -110,7 +112,7 @@ class GFGTranslator : public MPxFileTranslator
 		GFGFileExporter					gfgExporter;
 		GFGMayaOptions					gfgOptions;
 		std::vector<MString>			mayaMaterialNames;	// For avoiding material duplication
-		std::vector<MDagPath>			hierarcyNames;		// Lookup for parenting		
+		std::vector<MDagPath>			hierarcyNames;		// Lookup for parenting
 		MObject							lambert1;			// Lambert1 Material used in non materialed mesh
 		std::vector<MObjectArray>		skeletons;			// Skeletons with names
 		std::vector<bool>				skeletonExport;
@@ -120,7 +122,18 @@ class GFGTranslator : public MPxFileTranslator
 		MStringArray					referencedMaterials;
 		std::vector<MObjectArray>		importedSkeletons;
 		MObjectArray					importedMeshes;
+		// Index lookup monolithic buffer (pmr)
+		// for the std::map
+		static constexpr size_t			INITIAL_MAP_BUFFER_SIZE = 256 * 1024 * 1024;
+		using MapInnerType				= std::pair<GFGMayaMultiIndex, size_t>;
+		using VertLookupMapAllocator	= std::pmr::polymorphic_allocator<MapInnerType>;
 
+		std::pmr::monotonic_buffer_resource				monotonicBuffer;
+		std::pmr::polymorphic_allocator<MapInnerType>	mapAllocator;
+		std::pmr::map<GFGMayaMultiIndex, size_t>		vertexLookup;
+
+		// Some std out progress report
+		static constexpr uint32_t		PROGRESS_VERT_THRESHOLD = 1'000;
 	protected:
 
 	public:
@@ -142,11 +155,11 @@ class GFGTranslator : public MPxFileTranslator
 		// Both import and export is supported
 		bool					haveReadMethod() const override;
 		bool					haveWriteMethod() const override;
-		
+
 		// Reference and namespace is false
 		bool					haveReferenceMethod() const override;
 		bool					haveNamespaceSupport() const override;
-		
+
 		// Default extension is "gfg"
 		MString					defaultExtension() const override;
 

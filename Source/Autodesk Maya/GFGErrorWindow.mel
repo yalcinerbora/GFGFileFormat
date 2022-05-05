@@ -5,34 +5,34 @@ global proc string GFGErrorWindow (string $errors)
 	// Warning
 	// Info
 	// Fatal Error
-	
+
 	// Errors		: Terminates the export of an export type (material, mesh, animation etc..)
 	// 			 		however other instances of the type still being exported. Export is successfull
 	// Warning		: Something is probably the way user dont want. Export is still successfully
 	// Info			: Telling some information that may be usefull to tell the user
 	// Fatal Error	: All export/Import process is terminated and file/nodes created by the exporter is deleted
-			
-	string $errWindow = `window -title "GFG Error and Warnings" 
+
+	string $errWindow = `window -title "GFG Error and Warnings"
 							-iconName "GFG Err"
-							-s true -tb true//`; 
+							-s true -tb true//`;
 							-w 700`;
 
 	rowLayout -numberOfColumns 1 -adjustableColumn 1 -rowAttach 1 "both" 0;
 	textScrollList scrollList;
-		
+
 	// Append Errors To The Text List
 	string $errorList[];
 	int $index;
-	
-	if (size($errors) > 0) 
+
+	if (size($errors) > 0)
 	{
 		// Split from ;
 		tokenize($errors, ";", $errorList);
-		for ($index = 0; $index < size($errorList); $index++) 
+		for ($index = 0; $index < size($errorList); $index++)
 		{
 			textScrollList -e -append $errorList[$index] scrollList;
 		}
 	}
-	showWindow $errWindow;		
+	showWindow $errWindow;
 	return $errWindow;
  }

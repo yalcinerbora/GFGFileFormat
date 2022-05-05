@@ -51,7 +51,7 @@ static void	GetDataFromPlugBumpMap(GFGMaterialHeader& gfgMat,
 					MString filePath;
 					MFnDependencyNode fileNode(source);
 					MPlug fileNamePlug = fileNode.findPlug("fileTextureName", true);
-					
+
 					fileNamePlug.getValue(filePath);
 
 					// Save it as utf much more convinient
@@ -170,7 +170,7 @@ static void GetDataFromPlugFloat3(GFGMaterialHeader& gfgMat,
 
 		uniformData.insert(uniformData.end(), GFGDataTypeByteSize[static_cast<uint32_t>(GFGDataType::FLOAT_3)], 0);
 		std::memcpy(&uniformData[uniformData.size() - GFGDataTypeByteSize[static_cast<uint32_t>(GFGDataType::FLOAT_3)]],
-					data, 
+					data,
 					sizeof(float3));
 		cout << "Writing Float 3    " << data[0] << " " << data[1] << " " << data[2] << endl;
 		gfgMat.uniformList.emplace_back(GFGUniformData
@@ -178,7 +178,7 @@ static void GetDataFromPlugFloat3(GFGMaterialHeader& gfgMat,
 			0,						// Will be populated by the gfgLoader
 			GFGDataType::FLOAT_3,	// Type
 		});
-	}	
+	}
 }
 
 static void GetDataFromPlugFloat(GFGMaterialHeader& gfgMat,
@@ -284,7 +284,7 @@ static bool FetchAndLoadUniform(MDagModifier& commandList,
 					uniformData.data() + uniform.dataLocation,
 					GFGDataTypeByteSize[static_cast<uint32_t>(uniform.dataType)]);
 
-		//cout << "Trying to Write Float3 : " << 
+		//cout << "Trying to Write Float3 : " <<
 		//	data[0] << "  " <<
 		//	data[1] << "  " <<
 		//	data[2] << endl;
@@ -341,7 +341,7 @@ static bool FetchDataLP(unsigned int& textureIndex,
 	const GFGUniformData& uniform = gfgMaterial.uniformList[static_cast<int>(loc)];
 	if(CreateAndConnectTexture(commandList, texPath, textureNameBase + textureIndex, materialPlug, textureData))
 		textureIndex++;
-	else 
+	else
 		return FetchAndLoadUniform(commandList, dataType, materialPlug, uniform, uniformData);
 	return false;
 }
@@ -390,7 +390,9 @@ void GFGToMaya::Transform(MFnTransform& mayaTrans, const GFGTransform& gfgTrans)
 	euler[2] = gfgTrans.rotate[2];
 
 	MStatus sta = mayaTrans.setTranslation(translate, MSpace::kObject);
-	mayaTrans.setRotation(euler, MTransformationMatrix::kXYZ, MSpace::kObject);
+	// TODO: is this equivalent to the object state transform (This API is deprecated
+	//mayaTrans.setRotation(euler, MTransformationMatrix::kXYZ, MSpace::kObject);
+	mayaTrans.setRotation(euler, MTransformationMatrix::kXYZ);
 	mayaTrans.setScale(scale);
 }
 
@@ -408,14 +410,14 @@ MString GFGToMaya::MaterialType(GFGMaterialLogic logic)
 	}
 }
 
-void GFGToMaya::Material(MDagModifier& commandList, 
-						 const MString& name, 
+void GFGToMaya::Material(MDagModifier& commandList,
+						 const MString& name,
 						 const GFGMaterialHeader& gfgMaterial,
 						 const std::vector<uint8_t>& texData,
 						 const std::vector<uint8_t>& uniformData)
 {
 	static const float colors[][3] =
-	{ 
+	{
 		// Specifically Avoid Middle Gray and Green Colors here
 		// Middle Gray Used by lambert1 and Green used materialless objects
 		{ 0.8f, 0.0f, 0.0f },		// Red
@@ -546,7 +548,7 @@ void GFGToMaya::Material(MDagModifier& commandList,
 
 				// Texture ones are little bit different
 				const GFGTexturePath& texture1 = gfgMaterial.textureList[static_cast<uint32_t>(GFGMayaDX11TextureLoc::DIFFUSE_TEXTURE)];
-				if(CreateAndConnectTexture(commandList, texture1, textureNameBase + textureIndex, 
+				if(CreateAndConnectTexture(commandList, texture1, textureNameBase + textureIndex,
 					name + ".DiffuseTexture", texData)) textureIndex++;
 				const GFGTexturePath& texture2 = gfgMaterial.textureList[static_cast<uint32_t>(GFGMayaDX11TextureLoc::SPEUCLAR_TEXTURE)];
 				if(CreateAndConnectTexture(commandList, texture2, textureNameBase + textureIndex,
@@ -563,7 +565,7 @@ void GFGToMaya::Material(MDagModifier& commandList,
 			}
 			else
 			{
-				// Dx11 Plugin not loaded fallback to phong and try to fit some variables 
+				// Dx11 Plugin not loaded fallback to phong and try to fit some variables
 				commandList.commandToExecute("shadingNode -asShader -n \"" + name + "\" phong");
 
 				const GFGUniformData& uniform = gfgMaterial.uniformList[static_cast<uint32_t>(GFGMayaDX11UniformLoc::DIFFUSE_COLOR)];
@@ -576,8 +578,8 @@ void GFGToMaya::Material(MDagModifier& commandList,
 			// Unsupported Material
 			// Create a new lambert with the name and get color from colorpicker to show the material somehow
 			commandList.commandToExecute("shadingNode -asShader -n \"" + name + "\" lambert");
-			commandList.commandToExecute("setAttr \"" + name + ".color\" -type \"float3\" " + 
-										 colors[iterator][0] + " " + 
+			commandList.commandToExecute("setAttr \"" + name + ".color\" -type \"float3\" " +
+										 colors[iterator][0] + " " +
 										 colors[iterator][1] + " " +
 										 colors[iterator][2]);
 			iterator++;
@@ -597,9 +599,9 @@ void MayaToGFG::Transform(GFGTransform& gfgTransform, const MObject& mayaTransfo
 	// Maya has convinient transform definition for pivot changing etc.
 	// We need to bake it to GFG format since gfg does not have pivot information
 
-	// Translate 
+	// Translate
 	// If we only get translate rotate and scale parts we miss non uniform scale introducing translation
-	// and rotation pivot translation easiest way to get these get the translation portion of the resulting 
+	// and rotation pivot translation easiest way to get these get the translation portion of the resulting
 	// transformation matrix
 	MMatrix transMat = mayaTransform.transformationMatrix();
 
@@ -756,7 +758,7 @@ void MayaToGFG::Material(GFGMaterialHeader& gfgMat,
 	else if(mayaMaterial.apiType() == MFn::kPluginHardwareShader)
 	{
 		MFnDependencyNode dx11Node(mayaMaterial);
-		// It may not be dx11 shader 
+		// It may not be dx11 shader
 		// Check type name
 		if(dx11Node.typeName() == "dx11Shader")
 		{
@@ -770,12 +772,12 @@ void MayaToGFG::Material(GFGMaterialHeader& gfgMat,
 			MPlug opacity = dx11Node.findPlug("Opacity", true, &status);
 			MPlug opaFresnelMin = dx11Node.findPlug("OpacityFresnelMin", true, &status);
 			MPlug opaFresnelMax = dx11Node.findPlug("OpacityFresnelMax", true, &status);
-			
+
 			MPlug specTexOn = dx11Node.findPlug("UseSpecularTexture", true, &status);
 			MPlug specTex = dx11Node.findPlug("SpecularTexture", true, &status);
 			MPlug specColor = dx11Node.findPlug("SpecularColor", true, &status);
 			MPlug specPow = dx11Node.findPlug("SpecPower", true, &status);
-			
+
 			MPlug normalTexOn = dx11Node.findPlug("UseNormalTexture", true, &status);
 			MPlug normalTex = dx11Node.findPlug("NormalTexture", true, &status);
 			MPlug normalHeight = dx11Node.findPlug("NormalHeight", true, &status);

@@ -39,7 +39,7 @@ void GFGMayaAlphabeticalDFSIterator::Next()
 			done = true;
 			return;
 		}
-			
+
 		isVisited = false;
 		for(unsigned int i = 0; i < visited.length(); i++)
 		{
@@ -55,12 +55,12 @@ void GFGMayaAlphabeticalDFSIterator::Next()
 	current = item;
 
 	// Add Stuff Alphabetically (In reverse since stack pops from top)
-	// Ordering should be in a child squence named 'D' 'C' 'A' 'E' 'B'
+	// Ordering should be in a child sequence named 'D' 'C' 'A' 'E' 'B'
 	// 'E' 'D' 'C' 'B' 'A' Thus iteration sequence will be alphabetical
 	auto compFunc = [] (const MString& first, const MString& second)
 	{
 		return strncmp(first.asChar(),
-					   second.asChar(), 
+					   second.asChar(),
 					   (first.length() >= second.length()) ? first.length() : second.length()) > 0;
 	};
 

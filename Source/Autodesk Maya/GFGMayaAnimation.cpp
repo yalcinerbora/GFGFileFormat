@@ -59,11 +59,11 @@ MObject GFGMayaAnimationExport::JointToAnimCurve(GFGMayaAnimCurveType curveType,
 	MFnDependencyNode node(joint);
 
 	MString attributeName = CurveTypeName(curveType);
-	MPlug plug = node.findPlug(attributeName, &status);
+	MPlug plug = node.findPlug(attributeName, true, &status);
 	if(status != MS::kSuccess)
 	{
-		cerr << "Couldnt Find Plug \"" 
-			 << attributeName << "\" on joint " 
+		cerr << "Couldnt Find Plug \""
+			 << attributeName << "\" on joint "
 			 << MFnDagNode(joint).partialPathName() << endl;
 		return MObject();
 	}
@@ -76,8 +76,8 @@ MObject GFGMayaAnimationExport::JointToAnimCurve(GFGMayaAnimCurveType curveType,
 			return connections[0].node();
 		else
 		{
-			cerr << "Couldnt Find Anim Curve Attached to  \"" 
-				 << attributeName << "\" on joint " 
+			cerr << "Couldnt Find Anim Curve Attached to  \""
+				 << attributeName << "\" on joint "
 				 << MFnDagNode(joint).partialPathName() << endl;
 			return MObject();
 		}
@@ -87,8 +87,8 @@ MObject GFGMayaAnimationExport::JointToAnimCurve(GFGMayaAnimCurveType curveType,
 void GFGMayaAnimationExport::FetchDataFromMaya()
 {
 	MStatus status;
-	cout << "Starting Exporting Animation on Skeleton \"" 
-		 << MFnDagNode(skeleton[0]).partialPathName() 
+	cout << "Starting Exporting Animation on Skeleton \""
+		 << MFnDagNode(skeleton[0]).partialPathName()
 		 << "\" " << endl;
 
 	// Find Key Count
@@ -173,14 +173,14 @@ void GFGMayaAnimationExport::FetchDataFromMaya()
 				jointTransform.getOrientation(joRT);
 				if(joRT.order != MEulerRotation::kXYZ)
 					joRT.reorderIt(MEulerRotation::kXYZ);
-					
+
 				for(const float& time : keyTimings)
 				{
 					double rotX = rotCurveX.evaluate(MTime(time, MTime::kSeconds), nullptr);
 					double rotY = rotCurveY.evaluate(MTime(time, MTime::kSeconds), nullptr);
 					double rotZ = rotCurveZ.evaluate(MTime(time, MTime::kSeconds), nullptr);
 
-					// TODO: this should fail is rotation order is not xyz	
+					// TODO: this should fail is rotation order is not xyz
 					MQuaternion quat;
 					MEulerRotation rotMerged;
 					MEulerRotation rotCore = MEulerRotation(rotX, rotY, rotZ);
@@ -262,7 +262,7 @@ void GFGMayaAnimationExport::PrintFormattedData() const
 	cout << "HipTrans" << endl;
 	for(const auto& trans : hipTranslation)
 	{
-		cout << "{ " 
+		cout << "{ "
 			 << trans[0] << ", "
 			 << trans[1] << ", "
 			 << trans[2]
@@ -306,7 +306,7 @@ void GFGMayaAnimationExport::PrintFormattedData() const
 			cout << "EulerXYZRadians{ "
 				<< rot.x << ", "
 				<< rot.y << ", "
-				<< rot.z 
+				<< rot.z
 				<< " }"
 				<< endl;
 			innerNo++;
@@ -337,7 +337,7 @@ std::vector<uint8_t> GFGMayaAnimationExport::LayoutData()
 	uint64_t byteSize = rotations.size() * rotations[0].size() * sizeof(float) * 4;
 	byteSize += hipTranslation.size() * sizeof(float) * 3;
 	byteSize += keyTimes.size() * sizeof(float);
-	
+
 	std::vector<uint8_t> result(byteSize);
 	size_t resultPtr = 0;
 	switch(animLayout)
@@ -396,13 +396,13 @@ void GFGMayaAnimationImport::SortData(std::vector<std::vector<MEulerRotation>>& 
 	timings.resize(animHeader.keyCount);
 	rotations.resize(boneCount);
 	for(auto& keys : rotations) keys.resize(animHeader.keyCount);
-	
+
 	// Bones of Keys
 	uint64_t dataPtr = 0;
 	if(animHeader.layout == GFGAnimationLayout::BONES_OF_KEYS)
 	{
 		for(unsigned int i = 0; i < animHeader.keyCount; i++)
-		{			
+		{
 			std::memcpy(&timings[i], data.data() + dataPtr, sizeof(float));
 			dataPtr += sizeof(float);
 
@@ -411,7 +411,7 @@ void GFGMayaAnimationImport::SortData(std::vector<std::vector<MEulerRotation>>& 
 				std::memcpy(hipTranslation[i].data(), data.data() + dataPtr, sizeof(float) * 3);
 				dataPtr += sizeof(float) * 3;
 			}
-			
+
 			for(unsigned int j = 0; j < boneCount; j++)
 			{
 				float quat[4];
@@ -430,8 +430,8 @@ void GFGMayaAnimationImport::SortData(std::vector<std::vector<MEulerRotation>>& 
 	}
 	else if(animHeader.layout == GFGAnimationLayout::KEYS_OF_BONES)
 	{
-		std::memcpy(timings.data(), data.data() + dataPtr, 
-					sizeof(float) * animHeader.keyCount);		
+		std::memcpy(timings.data(), data.data() + dataPtr,
+					sizeof(float) * animHeader.keyCount);
 		dataPtr += sizeof(float) * animHeader.keyCount;
 
 		if(animHeader.type == GFGAnimType::WITH_HIP_TRANSLATE)
@@ -473,7 +473,7 @@ void GFGMayaAnimationImport::PrintFormattedData(const std::vector<std::vector<ME
 	cout << "HipTrans" << endl;
 	for(const auto& trans : hipTranslation)
 	{
-		cout << "{ " 
+		cout << "{ "
 			 << trans[0] << ", "
 			 << trans[1] << ", "
 			 << trans[2]
@@ -495,7 +495,7 @@ void GFGMayaAnimationImport::PrintFormattedData(const std::vector<std::vector<ME
 		innerNo = 0;
 		for(const auto& rotation : rotArray)
 		{
-			
+
 			if(animHeader.layout == GFGAnimationLayout::BONES_OF_KEYS)
 				cout << "Bone" << innerNo << endl;
 			else if(animHeader.layout == GFGAnimationLayout::KEYS_OF_BONES)
@@ -509,7 +509,7 @@ void GFGMayaAnimationImport::PrintFormattedData(const std::vector<std::vector<ME
 				<< quat.w
 				<< " }"
 				<< endl;
-			
+
 			cout << "EulerXYZRadians{ "
 				<< rotation.x << ", "
 				<< rotation.y << ", "
