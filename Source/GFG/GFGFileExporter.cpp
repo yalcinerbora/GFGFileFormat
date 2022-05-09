@@ -35,7 +35,7 @@ GFGAddMeshResult GFGFileExporter::AddMesh(const GFGTransform& transform,
 		}
 	);
 	uint32_t meshID = static_cast<uint32_t>(gfgHeader.meshes.size() - 1);
-	
+
 	// Add Scene Node
 	gfgHeader.sceneHierarchy.nodes.emplace_back(GFGNode {parent, transformID, meshID});
 	uint32_t nodeID = static_cast<uint32_t>(gfgHeader.sceneHierarchy.nodes.size() - 1);
@@ -159,17 +159,17 @@ uint32_t GFGFileExporter::AddMaterial(GFGMaterialLogic logic,
 	(
 		GFGMaterialHeader
 		{
-			GFGMaterialHeaderCore 
+			GFGMaterialHeaderCore
 			{
 				(textureList != nullptr) ? static_cast<uint32_t>(textureList->size()) : 0,
 				(uniformList != nullptr) ? static_cast<uint32_t>(uniformList->size()) : 0,
 				0,
 				0,
-				logic		
-			}, 
+				logic
+			},
 			(textureList != nullptr) ? *textureList : std::vector<GFGTexturePath>(),
 			(uniformList != nullptr) ? *uniformList : std::vector<GFGUniformData>(),
-			
+
 		}
 	);
 	if(textureList && texturePathData) materialTexturePath.emplace_back(*texturePathData);
@@ -200,7 +200,7 @@ uint32_t  GFGFileExporter::AddAnimation(GFGAnimationLayout layout,
 		GFGAnimationHeader
 		{
 			0,		// Will be  calculated later
-			layout,	
+			layout,
 			type,
 			interpType,
 			quatLayout,
@@ -208,7 +208,7 @@ uint32_t  GFGFileExporter::AddAnimation(GFGAnimationLayout layout,
 			keyCount
 		}
 	);
-	
+
 	// Actual Data Push
 	animationData.emplace_back(animData);
 

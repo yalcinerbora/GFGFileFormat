@@ -2229,9 +2229,9 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 
 								// Export Normal
 								if(!WriteNormal(vertexData,
-									normalDataD,
-									tangentDataD,
-									binormalDataD))
+												normalDataD,
+												tangentDataD,
+												binormalDataD))
 									return MStatus::kFailure;
 							}
 
@@ -2242,9 +2242,9 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 
 								// Export Tangent
 								if(!WriteTangent(vertexData,
-									normalDataD,
-									tangentDataD,
-									binormalDataD))
+												 normalDataD,
+												 tangentDataD,
+												 binormalDataD))
 									return MStatus::kFailure;
 							}
 							else if(type == GFGMayaOptionsIndex::BINORMAL)
@@ -2254,9 +2254,9 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 
 								// Export Binormal
 								if(!WriteBinormal(vertexData,
-									normalDataD,
-									tangentDataD,
-									binormalDataD))
+												  normalDataD,
+												  tangentDataD,
+												  binormalDataD))
 									return MStatus::kFailure;
 							}
 							break;
@@ -2503,7 +2503,6 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 	for(std::vector<uint8_t>& materialIndex : materialIndexData)
 		totalIndexByteSize += materialIndex.size();
 	indexDataConcat.reserve(totalIndexByteSize);
-
 
 	i = 0;
 	for(std::vector<uint8_t>& materialIndex : materialIndexData)
