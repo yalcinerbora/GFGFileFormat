@@ -5,7 +5,7 @@ size_t GFGFileLoader::EmptyHeaderSize =
 	sizeof(uint32_t) +			// FourCC Size
 	sizeof(uint64_t) +			// Header Size Size
 	sizeof(uint32_t) +			// Mesh List Size
-	sizeof(uint32_t) +			// Material List Size	
+	sizeof(uint32_t) +			// Material List Size
 	sizeof(uint32_t) +			// Skeleton List Size
 	sizeof(uint32_t) +			// Animation List Size
 	sizeof(uint32_t) +			// Secene Hierarcy Size
@@ -36,7 +36,7 @@ void GFGFileReaderSTL::MovePtrAbs(size_t absLocation)
 
 void GFGFileReaderSTL::MovePtrRelative(int64_t relLocation, GFGDirection dir)
 {
-	static const std::ios_base::seekdir lookup[] = 
+	static const std::ios_base::seekdir lookup[] =
 	{
 		std::ios_base::beg,
 		std::ios_base::cur,
@@ -52,7 +52,7 @@ size_t GFGFileReaderSTL::GetFileSize()
 	reader.seekg(0, std::ios_base::end);
 	fileSize = reader.tellg();
 	reader.seekg(currentLoc);
-	
+
 	return fileSize;
 }
 
@@ -333,6 +333,59 @@ GFGFileError GFGFileLoader::AllMeshIndexData(uint8_t data[])
 	return GFGFileError::OK;
 }
 
+GFGFileError GFGFileLoader::MeshVertexComponentDataGroup(uint8_t data[], uint32_t meshIndex,
+														 GFGVertexComponentLogic logic)
+{
+	assert(meshIndex < header.meshList.nodeAmount);
+	assert(valid);
+	const auto& meshHeader = header.meshes[meshIndex];
+
+	size_t componentStart = header.headerSize + meshHeader.headerCore.vertexStart;
+
+	// Find the component offset
+	size_t readAmount = MeshVertexComponentDataGroupSize(meshIndex, logic);
+	for(const auto& comp : meshHeader.components)
+	{
+		if(comp.logic != logic) continue;
+
+		componentStart += comp.startOffset;
+		// Move file ptr and memcpy to the buffer
+		reader->MovePtrAbs(componentStart);
+		reader->Read(data, readAmount);
+		return GFGFileError::OK;
+	}
+	return GFGFileError::MESH_DOES_NOT_HAVE_THAT_LOGIC;
+}
+size_t GFGFileLoader::MeshVertexComponentDataGroupSize(uint32_t meshIndex,
+													   GFGVertexComponentLogic logic)
+{
+	assert(meshIndex < header.meshList.nodeAmount);
+	assert(valid);
+
+	const auto& meshHeader = header.meshes[meshIndex];
+	// Check all components with the same start offset
+	// first find the start offset
+	size_t startOffset = std::numeric_limits<size_t>::max();
+	for(const auto& comp : meshHeader.components)
+	{
+		if(comp.logic == logic)
+		{
+			startOffset = comp.startOffset;
+			break;
+		}
+	}
+
+	// Total byte size of each vertex (for this component group)
+	size_t bytePerVert = 0;
+	for(const auto& comp : meshHeader.components)
+	{
+		if(comp.startOffset != startOffset) continue;
+		// GFG data is always packed (there is no stride between data)
+		bytePerVert += GFGDataTypeByteSize[static_cast<uint32_t>(comp.dataType)];
+	}
+	return bytePerVert * meshHeader.headerCore.vertexCount;
+}
+
 GFGFileError GFGFileLoader::MaterialTextureData(uint8_t data[], uint32_t materialIndex)
 {
 	assert(materialIndex < header.materialList.nodeAmount);
@@ -424,7 +477,7 @@ uint64_t GFGFileLoader::MeshVertexDataSize(uint32_t meshIndex) const
 uint64_t GFGFileLoader::AllMeshVertexDataSize() const
 {
 	assert(valid);
-	
+
 	uint64_t result = 0;
 	for(const GFGMeshHeader& mesh : header.meshes)
 	{
@@ -450,7 +503,7 @@ uint64_t GFGFileLoader::MeshIndexDataSize(uint32_t meshIndex) const
 uint64_t GFGFileLoader::AllMeshIndexDataSize() const
 {
 	assert(valid);
-	
+
 	uint64_t result = 0;
 	for(const GFGMeshHeader& mesh : header.meshes)
 	{
@@ -520,7 +573,7 @@ uint64_t GFGFileLoader::AnimationKeyframeDataSize(uint32_t animIndex) const
 	assert(animIndex < header.animationList.nodeAmount);
 	assert(valid);
 
-	uint64_t dataSize = header.animations[animIndex].keyCount * 
+	uint64_t dataSize = header.animations[animIndex].keyCount *
 						sizeof(float[4]) *
 						header.skeletons[header.animations[animIndex].skeletonIndex].boneAmount;
 	dataSize += header.animations[animIndex].keyCount * sizeof(float);				// Time

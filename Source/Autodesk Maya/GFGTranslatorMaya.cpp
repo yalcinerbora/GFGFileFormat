@@ -2369,7 +2369,7 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 			// Copy the index to the material index array
 			assert(sizeof(size_t) > currentMeshHeader.indexSize);
 			//size_t index = result.first->second;
-			size_t index = processedVertexCount - 1;
+			size_t index = result.first->second;
 			std::memcpy(&(currMatIndexArray[currMatIndexArray.size() - currentMeshHeader.indexSize]),
 						&(index), currentMeshHeader.indexSize);
 		}
@@ -2397,7 +2397,6 @@ MStatus GFGTranslator::ExportMesh(const GFGTransform& transform,
 	currentMeshHeader.aabb.min[2] = static_cast<float>(aabbMin.z);
 
 	// Determine Vertex Count
-	currentMeshHeader.vertexCount = positions.length();
 	currentMeshHeader.vertexCount = vertexLookup.size();
 
 	// Determine Component Count
@@ -3383,9 +3382,9 @@ void* GFGTranslator::creatorExport()
 
 GFGTranslator::GFGTranslator(bool import)
 	: import(import)
-	, monotonicBuffer(INITIAL_MAP_BUFFER_SIZE)
-	, mapAllocator(&monotonicBuffer)
-	, vertexLookup(mapAllocator)
+	//, monotonicBuffer(INITIAL_MAP_BUFFER_SIZE)
+	//, mapAllocator(&monotonicBuffer)
+	//, vertexLookup(mapAllocator)
 {}
 
 bool GFGTranslator::haveReadMethod() const

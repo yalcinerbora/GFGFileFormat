@@ -128,9 +128,10 @@ class GFGTranslator : public MPxFileTranslator
 		using MapInnerType				= std::pair<GFGMayaMultiIndex, size_t>;
 		using VertLookupMapAllocator	= std::pmr::polymorphic_allocator<MapInnerType>;
 
-		std::pmr::monotonic_buffer_resource				monotonicBuffer;
-		std::pmr::polymorphic_allocator<MapInnerType>	mapAllocator;
-		std::pmr::map<GFGMayaMultiIndex, size_t>		vertexLookup;
+		//std::pmr::monotonic_buffer_resource				monotonicBuffer;
+		//std::pmr::polymorphic_allocator<MapInnerType>	mapAllocator;
+		//std::pmr::map<GFGMayaMultiIndex, size_t>		vertexLookup;
+		std::map<GFGMayaMultiIndex, size_t>		vertexLookup;
 
 		// Some std out progress report
 		static constexpr uint32_t		PROGRESS_VERT_THRESHOLD = 1'000;
