@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
+include(GNUInstallDirs)
+
 # All CMake Related files is in the current folder
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -28,18 +30,18 @@ project(GPUFriendlyGraphics LANGUAGES CXX)
 set(GFG_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..)
 cmake_path(NORMAL_PATH GFG_DIRECTORY)
 
-set(GFG_SOURCE_DIRECTORY ${GFG_DIRECTORY}/Source)
-set(GFG_LIB_DIRECTORY ${GFG_DIRECTORY}/Lib)
-set(GFG_LIB_INCLUDE_DIRECTORY ${GFG_DIRECTORY}/Lib/Include)
-set(GFG_CONFIG_LIB_DOC_DIRECTORY ${GFG_DIRECTORY}/Lib/Docs)
-set(GFG_BIN_DIRECTORY ${GFG_DIRECTORY}/Bin)
-set(GFG_EXT_DIRECTORY ${GFG_DIRECTORY}/Ext)
-set(GFG_RESOURCE_DIRECTORY ${GFG_DIRECTORY}/Resources)
+set(GFG_SOURCE_DIRECTORY ${GFG_DIRECTORY}Source)
+set(GFG_LIB_DIRECTORY ${GFG_DIRECTORY}Lib)
+set(GFG_LIB_INCLUDE_DIRECTORY ${GFG_DIRECTORY}Lib/Include)
+set(GFG_CONFIG_LIB_DOC_DIRECTORY ${GFG_DIRECTORY}Lib/Docs)
+set(GFG_BIN_DIRECTORY ${GFG_DIRECTORY}Bin)
+set(GFG_EXT_DIRECTORY ${GFG_DIRECTORY}Ext)
+set(GFG_RESOURCE_DIRECTORY ${GFG_DIRECTORY}Resources)
 # Build is probably not used but its here for convenience
-set(GFG_BUILD_DIRECTORY ${GFG_DIRECTORY}/Build)
+set(GFG_BUILD_DIRECTORY ${GFG_DIRECTORY}Build)
 # Working Dir is used for debugging (currently shaders are here so...)
 # For Visual Studio Projects this is copied to WorkingDir property for executables
-set(GFG_WORKING_DIRECTORY ${GFG_DIRECTORY}/WorkingDir)
+set(GFG_WORKING_DIRECTORY ${GFG_DIRECTORY}WorkingDir)
 
 # Determine Platform and Config
 if(MSVC)

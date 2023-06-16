@@ -54,6 +54,8 @@ add_library(GFGFileIO STATIC)
 
 target_sources(GFGFileIO PRIVATE ${SRC_ALL})
 
+target_sources(GFGFileIO PUBLIC FILE_SET HEADERS BASE_DIRS ${CURRENT_SOURCE_DIR} FILES ${EXPORT_HEADERS})
+
 target_include_directories(GFGFileIO PRIVATE
                            ${GFG_SOURCE_DIRECTORY})
 
@@ -75,6 +77,6 @@ target_link_libraries(GFGFileIO
 if(GFG_INSTALL)
     install(TARGETS GFGFileIO
             DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    install(FILES ${EXPORT_HEADERS}
-            TYPE INCLUDE)
+    install(TARGETS GFGFileIO FILE_SET HEADERS
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/gfg)
 endif()
