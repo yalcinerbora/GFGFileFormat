@@ -53,3 +53,5 @@ Bin/
 *.db-shm
 *.db-wal
 *.ipch
+/Build/Windows/.vs/GFGFileFormat/FileContentIndex/*.vsidx
+/Build/Windows/.vs/GFGFileFormat/FileContentIndex/*.lock
