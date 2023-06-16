@@ -6,8 +6,6 @@ Author(s):
 	Bora Yalciner
 */
 
-#define NOMINMAX
-
 #include <maya/MStatus.h>
 #include <maya/MObject.h>
 #include <maya/MFnPlugin.h>
@@ -2770,7 +2768,7 @@ MStatus GFGTranslator::ExportSkeleton(const MDagPath& root, bool inSelectionList
 	MObjectArray& skelList = skeletons.back();
 
 
-	auto WriteParentAndTransform = [&] (MDagPath& parentPath, MObject& currentNode)
+	auto WriteParentAndTransform = [&] (MDagPath& parentPath, const MObject& currentNode)
 	{
 		// DEBUG
 		//MFnDagNode curr(currentNode);

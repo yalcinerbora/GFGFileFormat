@@ -8,10 +8,17 @@ set(CMAKE_CONFIGURATION_TYPES Debug;Release CACHE STRING "Selected by user")
 set(CMAKE_BUILD_TYPE Release CACHE STRING "Selected by user")
 
 option(GFG_BUILD_MAYA_PLUG_IN "Build maya import/export plug-in" ON)
+option(GFG_INSTALL "install gfg (usefull for externalProject_add" OFF)
 
 # Globals Common for All Projects
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# Ask for Maya include directiories
+if(GFG_BUILD_MAYA_PLUG_IN)
+    set(GFG_MAYA_INCLUDE_DIRECTORY "C:/Program Files/Autodesk/Maya2024/include" CACHE STRING "Maya plug-in include directory")
+    set(GFG_MAYA_LIB_DIRECTORY "C:/Program Files/Autodesk/Maya2024/lib" CACHE STRING "Maya plug-in lib directory")
+endif()
 
 
 project(GPUFriendlyGraphics LANGUAGES CXX)
@@ -92,7 +99,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${GFG_CONFIG_BIN_DIRECTORY})
 # Meta library directory
 # All precompiled libraries are resides here
 link_directories(${GFG_CONFIG_LIB_DIRECTORY}
-                 ${GFG_PLATFORM_LIB_DIRECTORY})
+                 ${GFG_PLATFORM_LIB_DIRECTORY}
+                 $<$<BOOL:GFG_BUILD_MAYA_PLUG_IN>:${GFG_MAYA_LIB_DIRECTORY}>)
 
 # Generic Preprocessor Definitions
 set(GFG_PREPROCESSOR_DEFS_GENERIC

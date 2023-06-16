@@ -21,9 +21,22 @@ set(SRC_COMMON
     ${CURRENT_SOURCE_DIR}/GFGVertexElementTypes.cpp
     ${CURRENT_SOURCE_DIR}/GFGVertexElementTypes.h)
 
+set(EXPORT_HEADERS
+    ${CURRENT_SOURCE_DIR}/GFGAnimationHeader.h
+    ${CURRENT_SOURCE_DIR}/GFGHeader.h
+    ${CURRENT_SOURCE_DIR}/GFGMaterialHeader.h
+    ${CURRENT_SOURCE_DIR}/GFGMeshHeader.h
+    ${CURRENT_SOURCE_DIR}/GFGSkeletonHeader.h
+    ${CURRENT_SOURCE_DIR}/GFGConversion.h
+    ${CURRENT_SOURCE_DIR}/GFGEnumerations.h
+    ${CURRENT_SOURCE_DIR}/GFGFileExporter.h
+    ${CURRENT_SOURCE_DIR}/GFGFileLoader.h
+    ${CURRENT_SOURCE_DIR}/GFGMaterialTypes.h
+    ${CURRENT_SOURCE_DIR}/GFGVertexElementTypes.h)
+
 set(SRC_ALL
     ${SRC_HEADER_STRUCTS}
-    ${SRC_COMMON}
+    ${SRC_COMMON})
 
 source_group("HeaderStructs" FILES ${SRC_HEADER_STRUCTS})
 
@@ -39,7 +52,7 @@ source_group("" FILES ${SRC_COMMON})
 # DLL File
 add_library(GFGFileIO STATIC)
 
-target_sources(GFGFileIO PUBLIC ${SRC_ALL})
+target_sources(GFGFileIO PRIVATE ${SRC_ALL})
 
 target_include_directories(GFGFileIO PRIVATE
                            ${GFG_SOURCE_DIRECTORY})
@@ -57,3 +70,11 @@ set_target_properties(GFGFileIO PROPERTIES
 
 target_link_libraries(GFGFileIO
                       ${PLATFORM_SPEC_LIBRARIES})
+
+# Installation
+if(GFG_INSTALL)
+    install(TARGETS GFGFileIO
+            DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install(FILES ${EXPORT_HEADERS}
+            TYPE INCLUDE)
+endif()

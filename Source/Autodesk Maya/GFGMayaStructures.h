@@ -17,8 +17,6 @@ https://github.com/yalcinerbora/GFGFileFormat/blob/master/LICENSE
 #ifndef __GFG_MAYASTRUCTURES_H__
 #define __GFG_MAYASTRUCTURES_H__
 
-#define NOMINMAX
-
 #include <cstdint>
 #include <limits>
 #include <maya/MIntArray.h>
