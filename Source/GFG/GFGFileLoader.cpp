@@ -1,5 +1,7 @@
 #include "GFGFileLoader.h"
 #include <cassert>
+#include <cstring>
+#include <limits>
 
 size_t GFGFileLoader::EmptyHeaderSize =
 	sizeof(uint32_t) +			// FourCC Size
