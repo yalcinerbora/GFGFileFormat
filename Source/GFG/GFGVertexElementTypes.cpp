@@ -1,6 +1,7 @@
 #include "GFGVertexElementTypes.h"
 #include "GFGConversion.h"
 #include <cassert>
+#include <cstring>
 
 bool GFGPosition::IsCompatible(GFGDataType t)
 {
