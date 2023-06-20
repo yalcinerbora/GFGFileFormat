@@ -89,7 +89,7 @@ enum class GFGDataType : uint32_t
 	UINT64_2,
 	UINT64_3,
 	UINT64_4,
-	
+
 	// Normalized Data Types (DX UNORM or NORM)
 	// Fixed Point
 	// Definition of UNORM/NORM can be found here
@@ -152,7 +152,7 @@ enum class GFGDataType : uint32_t
 						// 2N:  2 x norm32 types (for normalized tangent)
 						// which shows x, y
 						// H: 4 byte data in which
-						// two byte shows binorm direction (least 
+						// two byte shows binorm direction (least
 						// other two byte show tang direction
 						// binorm headedness shows weather "N cross T"
 						// is on wrong direction
@@ -175,14 +175,14 @@ enum class GFGDataType : uint32_t
 						// holds 8 16 bit integer values
 						// OGL Feed : use GL_INT with four component
 
-	// Voxel Related	
+	// Voxel Related
 	UINT_2_10_10_10,	// Packed Data, LSB to MSB is 10 to 2, unpacked format is 3 integers between 0 1023, Last 2 bit is unused
 	//------------------------------------//
 	//------------------------------------//
 	END					// For Static Asserting the size array
 };
 
-static std::ostream& operator<<(std::ostream& os, const GFGDataType& dt)
+inline std::ostream& operator<<(std::ostream& os, const GFGDataType& dt)
 {
 	static const char* values[] =
 	{
@@ -409,10 +409,10 @@ static const size_t GFGDataTypeByteSize[]
 	// Packed Data Types
 	4 * 1,	// INT_2_10_10_10,		// Packed Data, LSB to MSB is 10 to 2, unpacked format is 4 integers
 	4 * 2,	// UINT_2_10_10_10,		// Packed Data, LSB to MSB is 10 to 2, unpacked format is 4 unsigned integers
-	
+
 	// https://www.opengl.org/registry/specs/EXT/packed_float.txt
 	4 * 1,	// UINT_10F_11F_11F		// Packed Data, LSB to MSB is 11F to 10F, unpacked format is 3 floating point numbers
-	
+
 	//------------------------------------//
 	//------------------------------------//
 	// Custom Data Types
@@ -439,13 +439,13 @@ static const size_t GFGDataTypeByteSize[]
 									// holds 16 8 bit integer values
 	16,		//UINT16_2_4,			// 16 bit integer index in a 4 component 32 bit type
 									// holds 8 16 bit integer values
-									// Voxel Related	
+									// Voxel Related
 	4		//UINT_2_10_10_10,		// Packed Data, LSB to MSB is 10 to 2, unpacked format is 3 integers between 0 1023, Last 2 bit is unused
 	//------------------------------------//
 	//------------------------------------//
 };
 
-static_assert((sizeof(GFGDataTypeByteSize) / sizeof(size_t)) == static_cast<size_t>(GFGDataType::END), 
+static_assert((sizeof(GFGDataTypeByteSize) / sizeof(size_t)) == static_cast<size_t>(GFGDataType::END),
 			  "\'GFGDataType\' enum and its size array does not have same amount of elements.");
 
 enum class GFGTopology : uint32_t

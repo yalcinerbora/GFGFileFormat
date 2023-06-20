@@ -74,7 +74,7 @@ GFGAddMeshResult GFGFileExporter::AddMesh(const GFGTransform& transform,
 	return {meshID, nodeID};
 }
 
-uint32_t GFGFileExporter::AddMesh(uint32_t parent,
+uint32_t GFGFileExporter::AddMesh(uint32_t,
 								  const std::vector<GFGVertexComponent>& headerComponent,
 								  const GFGMeshHeaderCore& headerBase,
 								  const std::vector<uint8_t>& vertexData,
@@ -152,9 +152,6 @@ uint32_t GFGFileExporter::AddMaterial(GFGMaterialLogic logic,
 									  const std::vector<uint8_t>* texturePathData,
 									  const std::vector<uint8_t>* uniformData)
 {
-	uint32_t texCount = (textureList != nullptr) ? static_cast<uint32_t>(textureList->size()) : 0;
-	uint32_t uniformCount = (uniformList != nullptr) ? static_cast<uint32_t>(uniformList->size()) : 0;
-
 	gfgHeader.materials.emplace_back
 	(
 		GFGMaterialHeader

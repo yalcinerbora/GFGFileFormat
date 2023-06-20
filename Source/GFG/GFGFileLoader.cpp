@@ -75,7 +75,7 @@ GFGFileLoader& GFGFileLoader::operator= (GFGFileLoader&& mv)
 {
 	header.Clear();
 	reader = mv.reader;
-	valid = valid;
+	valid = mv.valid;
 
 	mv.valid = false;
 	mv.reader = nullptr;
@@ -592,7 +592,7 @@ uint64_t GFGFileLoader::AllAnimationKeyframeDataSize()const
 	uint64_t result = 0;
 	if(header.animationList.nodeAmount != 0)
 	{
-		for(int i = 0; i < header.animations.size(); i++)
+		for(size_t i = 0; i < header.animations.size(); i++)
 		{
 			result += AnimationKeyframeDataSize(i);
 		}

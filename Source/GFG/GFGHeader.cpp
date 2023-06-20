@@ -62,7 +62,7 @@ void GFGHeader::CalculateDataOffsets()
 		headerSize += sizeof(uint32_t);
 		headerSize += skel.bones.size() * sizeof(GFGBone);
 	}
-	for(const GFGAnimationHeader& anim : animations)
+	for(size_t i = 0; i < animations.size(); i++)
 	{
 		animationList.animationLocations.push_back(headerSize);
 		headerSize += sizeof(GFGAnimationHeader);
@@ -150,20 +150,20 @@ void GFGHeader::CalculateDataOffsets()
 	// Skeleton Does not have anything on data segment
 
 	// Animation
-	// Animation has 
+	// Animation has
 	//	time for each keyframe
 	//	quaternion for each keyframe-joint
 	//	optional hip translate for each keyframe-rootjoint
 	for(GFGAnimationHeader& animation : animations)
 	{
 		animation.dataStart = dataOffsetPtr;
-		dataOffsetPtr += animation.keyCount * 
-						 sizeof(float[4]) * 
+		dataOffsetPtr += animation.keyCount *
+						 sizeof(float[4]) *
 						 skeletons[animation.skeletonIndex].boneAmount;
 		dataOffsetPtr += animation.keyCount * sizeof(float);				// Time
 
-		if(animation.type == GFGAnimType::WITH_HIP_TRANSLATE) 
-			dataOffsetPtr += animation.keyCount * sizeof(float[3]);			// Hip Translate for each Key		
+		if(animation.type == GFGAnimType::WITH_HIP_TRANSLATE)
+			dataOffsetPtr += animation.keyCount * sizeof(float[3]);			// Hip Translate for each Key
 	}
 
 	// Write Transform Sizes

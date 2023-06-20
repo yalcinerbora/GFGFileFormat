@@ -97,8 +97,8 @@ bool GFGNormal::IsCompatible(GFGDataType t)
 bool GFGNormal::ConvertData(uint8_t data[], size_t dataSize,
 							const double normal[3],
 							GFGDataType type,
-							const double tangent[3],
-							const double bitangent[3])
+							const double[3],
+							const double[3])
 {
 	switch(type)
 	{
@@ -304,8 +304,8 @@ bool GFGBinormal::IsCompatible(GFGDataType t)
 bool GFGBinormal::ConvertData(uint8_t data[], size_t dataSize,
 							  const double bitangent[3],
 							  GFGDataType type,
-							  const double tangent[3],
-							  const double normal[3])
+							  const double[3],
+							  const double[3])
 {
 	switch(type)
 	{

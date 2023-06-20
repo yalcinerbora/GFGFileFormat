@@ -1,5 +1,5 @@
 #include "GFGConversion.h"
-#include "half.hpp" 
+#include "half.hpp"
 #include <cassert>
 
 static_assert(sizeof(half_float::half) == 2, "Half Size is not 16 bit");
@@ -9,7 +9,7 @@ static auto GFGCrossProduct = [] (float out[3], const float a[3], const float b[
 {
 	out[0] = a[1] * b[2] - a[2] * b[1];
 	out[1] = a[2] * b[0] - a[0] * b[2];
-	out[2] = a[0] * b[1] - a[1] * b[0];		
+	out[2] = a[0] * b[1] - a[1] * b[0];
 };
 
 uint16_t GFGConversions::FloatToHalf(float f)
@@ -80,7 +80,7 @@ uint16_t GFGConversions::FloatToUnorm16(float f)
 uint32_t GFGConversions::FloatToUnorm32(float f)
 {
 	float clamped = f <= 0.0f ? 0.0f : f >= 1.0f ? 1.0f : f;
-	return static_cast<uint32_t>(clamped * std::numeric_limits<uint32_t>::max());
+	return static_cast<uint32_t>(clamped * static_cast<float>(std::numeric_limits<uint32_t>::max()));
 }
 
 int8_t GFGConversions::FloatToNorm8(float f)
@@ -170,13 +170,13 @@ uint32_t GFGConversions::FloatsToUInt10F_11F_11F(const float values[3])
 	// 10 bit floating point has 5bit exponent 5 bit mantissa NO sign bit
 	// 11 bit floating point has 5bit exponent 6 bit mantissa NO sign bit
 	// TODO Implement later
-	auto floatTo10F = [] (const float value) -> uint32_t
+	auto floatTo10F = [] (const float) -> uint32_t
 	{
 		assert(false);
 		return 0;
 	};
 
-	auto floatTo11F = [] (const float value) -> uint32_t
+	auto floatTo11F = [] (const float) -> uint32_t
 	{
 		assert(false);
 		return 0;
@@ -201,13 +201,13 @@ uint32_t GFGConversions::DoublesToUInt10F_11F_11F(const double values[3])
 	// 10 bit floating point has 5bit exponent 5 bit mantissa NO sign bit
 	// 11 bit floating point has 5bit exponent 6 bit mantissa NO sign bit
 	// TODO Implement later
-	auto floatTo10F = [] (const double value) -> uint32_t
+	auto floatTo10F = [] (const double) -> uint32_t
 	{
 		assert(false);
 		return 0;
 	};
 
-	auto floatTo11F = [] (const double value) -> uint32_t
+	auto floatTo11F = [] (const double) -> uint32_t
 	{
 		assert(false);
 		return 0;
@@ -268,8 +268,8 @@ uint32_t GFGConversions::DoublesToCustom_1_15N_16N(const double values[3])
 }
 
 void GFGConversions::FloatsToCustom_Tang_H_2N(uint32_t result[3],
-											  const float normal[3], 
-											  const float tangent[3], 
+											  const float normal[3],
+											  const float tangent[3],
 											  const float binormal[3])
 {
 	// Direct Copy First 2 Result
@@ -375,7 +375,7 @@ void GFGConversions::DoubleToHalfV(uint8_t dataOut[], size_t dataCapacity, const
 {
 	uint16_t temp;
 	assert(dataCapacity >= sizeof(half_float::half) * dataAmount);
-	for(int i = 0; i < dataAmount; i++)
+	for(size_t i = 0; i < dataAmount; i++)
 	{
 		temp = GFGConversions::DoubleToHalf(data[i]);
 		std::memcpy(dataOut + i * sizeof(uint16_t), &temp, sizeof(uint16_t));
@@ -386,23 +386,23 @@ void GFGConversions::DoubleToFloatV(uint8_t dataOut[], size_t dataCapacity, cons
 {
 	float temp;
 	assert(dataCapacity >= sizeof(float) * dataAmount);
-	for(int i = 0; i < dataAmount; i++)
+	for(size_t i = 0; i < dataAmount; i++)
 	{
 		temp = static_cast<float>(data[i]);
 		std::memcpy(dataOut + i * sizeof(float), &temp, sizeof(float));
 	}
 }
 
-void GFGConversions::DoubleToQuadV(uint8_t dataOut[], size_t dataCapacity, const double data[], size_t dataAmount)
+void GFGConversions::DoubleToQuadV(uint8_t[], size_t, const double[], size_t)
 {
-	false;
+	assert(false);
 }
 
 void GFGConversions::DoubleToUnorm8V(uint8_t dataOut[], size_t dataCapacity, const double data[], size_t dataAmount)
 {
 	uint8_t temp;
 	assert(dataCapacity >= sizeof(uint8_t) * dataAmount);
-	for(int i = 0; i < dataAmount; i++)
+	for(size_t i = 0; i < dataAmount; i++)
 	{
 		temp = GFGConversions::DoubleToUnorm8(data[i]);
 		std::memcpy(dataOut + i * sizeof(uint8_t), &temp, sizeof(uint8_t));
@@ -413,7 +413,7 @@ void GFGConversions::DoubleToUnorm16V(uint8_t dataOut[], size_t dataCapacity, co
 {
 	uint16_t temp;
 	assert(dataCapacity >= sizeof(uint16_t) * dataAmount);
-	for(int i = 0; i < dataAmount; i++)
+	for(size_t i = 0; i < dataAmount; i++)
 	{
 		temp = GFGConversions::DoubleToUnorm16(data[i]);
 		std::memcpy(dataOut + i * sizeof(uint16_t), &temp, sizeof(uint16_t));
@@ -424,7 +424,7 @@ void GFGConversions::DoubleToUnorm32V(uint8_t dataOut[], size_t dataCapacity, co
 {
 	uint32_t temp;
 	assert(dataCapacity >= sizeof(uint32_t) * dataAmount);
-	for(int i = 0; i < dataAmount; i++)
+	for(size_t i = 0; i < dataAmount; i++)
 	{
 		temp = GFGConversions::DoubleToUnorm32(data[i]);
 		std::memcpy(dataOut + i * sizeof(uint32_t), &temp, sizeof(uint32_t));
@@ -435,7 +435,7 @@ void GFGConversions::DoubleToNorm8V(uint8_t dataOut[], size_t dataCapacity, cons
 {
 	int8_t temp;
 	assert(dataCapacity >= sizeof(int8_t) * dataAmount);
-	for(int i = 0; i < dataAmount; i++)
+	for(size_t i = 0; i < dataAmount; i++)
 	{
 		temp = GFGConversions::DoubleToNorm8(data[i]);
 		std::memcpy(dataOut + i * sizeof(int8_t), &temp, sizeof(int8_t));
@@ -446,7 +446,7 @@ void GFGConversions::DoubleToNorm16V(uint8_t dataOut[], size_t dataCapacity, con
 {
 	int16_t temp;
 	assert(dataCapacity >= sizeof(int16_t) * dataAmount);
-	for(int i = 0; i < dataAmount; i++)
+	for(size_t i = 0; i < dataAmount; i++)
 	{
 		temp = GFGConversions::DoubleToNorm16(data[i]);
 		std::memcpy(dataOut + i * sizeof(int16_t), &temp, sizeof(int16_t));
@@ -457,7 +457,7 @@ void GFGConversions::DoubleToNorm32V(uint8_t dataOut[], size_t dataCapacity, con
 {
 	int32_t temp;
 	assert(dataCapacity >= sizeof(int32_t) * dataAmount);
-	for(int i = 0; i < dataAmount; i++)
+	for(size_t i = 0; i < dataAmount; i++)
 	{
 		temp = GFGConversions::DoubleToNorm32(data[i]);
 		std::memcpy(dataOut + i * sizeof(int32_t), &temp, sizeof(int32_t));
@@ -467,7 +467,7 @@ void GFGConversions::DoubleToNorm32V(uint8_t dataOut[], size_t dataCapacity, con
 void GFGConversions::UIntToUInt8V(uint8_t dataOut[], size_t dataCapacity, const unsigned int data[], size_t dataAmount)
 {
 	assert(dataCapacity >= sizeof(uint8_t) * dataAmount);
-	for(unsigned int i = 0; i < dataAmount; i++)
+	for(size_t i = 0; i < dataAmount; i++)
 	{
 		uint8_t temp = static_cast<uint8_t>(data[i]);
 		std::memcpy(dataOut + i * sizeof(uint8_t), &temp, sizeof(uint8_t));
@@ -546,7 +546,7 @@ void GFGConversions::FloatToDoubleV(double dataOut[], size_t dataCapacity, const
 	}
 }
 
-void GFGConversions::QuadToDoubleV(double dataOut[], size_t dataCapacity, const uint8_t dataIn[], size_t dataAmount)
+void GFGConversions::QuadToDoubleV(double[], size_t, const uint8_t[], size_t)
 {
 	assert(false);
 }
@@ -740,13 +740,13 @@ void GFGConversions::UInt2_10_10_10ToDoubles(double dataOut[4], uint32_t data)
 	dataOut[0] = static_cast<double>(temp) / 0x3FF;
 }
 
-void GFGConversions::UInt10F_11F_11FToFloats(float dataOut[3], uint32_t data)
+void GFGConversions::UInt10F_11F_11FToFloats(float[3], uint32_t)
 {
 	// TODO Implement Later
 	assert(false);
 }
 
-void GFGConversions::UInt10F_11F_11FToDoubles(double dataOut[3], uint32_t data)
+void GFGConversions::UInt10F_11F_11FToDoubles(double[3], uint32_t)
 {
 	// TODO Implement Later
 	assert(false);
