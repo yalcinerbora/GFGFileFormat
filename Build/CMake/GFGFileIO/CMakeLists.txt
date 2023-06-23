@@ -78,6 +78,7 @@ if(GFG_INSTALL)
     # install(TARGETS GFGFileIO
     #         DESTINATION ${CMAKE_INSTALL_LIBDIR})
     install(TARGETS GFGFileIO
+            EXPORT GFGFileIOTargets
             DESTINATION ${CMAKE_INSTALL_LIBDIR}
             FILE_SET HEADERS
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/gfg)

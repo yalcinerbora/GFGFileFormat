@@ -122,3 +122,30 @@ add_subdirectory(GFGFileIO)
 if(GFG_BUILD_MAYA_PLUG_IN)
     add_subdirectory(GFGMaya)
 endif()
+
+
+# Install Config
+if(GFG_INSTALL)
+
+    # From the cmake docs tutorial
+    # TODO: Find out how to create config file for both targets
+    # Currently it only does for GFG lib but not GFGMaya
+    include(CMakePackageConfigHelpers)
+
+    set(GFG_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/GFGFileIO)
+
+    # generate the config file that includes the exports
+    configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/GFGFileIOConfig.cmake.in
+            "${CMAKE_CURRENT_BINARY_DIR}/GFGFileIOConfig.cmake"
+            INSTALL_DESTINATION ${GFG_CONFIG_DIR}
+            NO_CHECK_REQUIRED_COMPONENTS_MACRO
+    )
+
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/GFGFileIOConfig.cmake"
+            DESTINATION ${GFG_CONFIG_DIR})
+
+    install(EXPORT GFGFileIOTargets
+            FILE GFGFileIOTargets.cmake
+            DESTINATION ${GFG_CONFIG_DIR})
+
+endif()
