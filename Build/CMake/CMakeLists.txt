@@ -11,7 +11,7 @@ option(GFG_BUILD_MAYA_PLUG_IN "Build maya import/export plug-in" ON)
 option(GFG_INSTALL "install gfg (usefull for externalProject_add" OFF)
 
 # Globals Common for All Projects
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Ask for Maya include directiories

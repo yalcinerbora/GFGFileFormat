@@ -1,6 +1,6 @@
 global proc GFGApplyOrderingsToSliders(int $orderingValues[], string $sliders[])
 {
-	for($index = 0; $index < size($orderingValues); $index++) 
+	for($index = 0; $index < size($orderingValues); $index++)
 	{
 		intScrollBar -e -value $orderingValues[$index] $sliders[$index];
 	}
@@ -20,8 +20,8 @@ global proc string GFGPackGroupLayout(int $orderingValues[])
 				{
 					$values = $values + "<";
 				}
-			
-				switch( $index ) 
+
+				switch( $index )
 				{
 					case 0 :
 						$values = $values + "P";
@@ -59,11 +59,11 @@ global proc GFGUnpackGroupLayout( string $sliders[], string $orderingText, int $
 {
 	string $orderList;
 	string $orderSplit[];
-	
+
 	$orderList = $ordering;
-	
+
 	tokenize($orderList, "<", $orderSplit);
-	
+
 	for($index = 0; $index < size($orderSplit); $index++)
 	{
 		if($orderSplit[$index] == "P")
@@ -99,7 +99,7 @@ global proc GFGUnpackGroupLayout( string $sliders[], string $orderingText, int $
 			$orderingValues[7] = $index;
 		}
 	}
-	
+
 	GFGApplyOrderingsToSliders($orderingValues, $sliders);
 	text -e -l ("Current Ordering: " +  $orderList) $orderingText;
 }
@@ -157,7 +157,7 @@ global proc int GFGOptsExport ( string $parent,
 //		$initialSettings - the current options string in effect at the
 //						   time this script is invoked.
 //		$resultCallback	-
-//				This is the proc to be called with the result string. 
+//				This is the proc to be called with the result string.
 //				resultCallback ( string $optionsString )
 //
 //	Returns:
@@ -263,28 +263,31 @@ global proc int GFGOptsExport ( string $parent,
 	$gfgDataTypes[70] = "UNORM32_3";
 	$gfgDataTypes[71] = "UNORM32_4";
 
-	$gfgDataTypes[72] = "INT_2_10_10_10";
-	$gfgDataTypes[73] = "UINT_2_10_10_10";
+	$gfgDataTypes[72] = "NORM_2_10_10_10";
+	$gfgDataTypes[73] = "UNORM_2_10_10_10";
 	$gfgDataTypes[74] = "UINT_10F_11F_11F";
 
 	$gfgDataTypes[75] = "CUSTOM_1_15F_16";
-	$gfgDataTypes[76] = "CUSTOM_TANG_2F_H";
+	$gfgDataTypes[76] = "CUSTOM_TANG_H_2N";
 	$gfgDataTypes[77] = "UNORM8_4_4";
 	$gfgDataTypes[78] =	"UNORM16_2_4";
 	$gfgDataTypes[79] =	"UINT8_4_4";
 	$gfgDataTypes[80] =	"UINT16_2_4";
+	$gfgDataTypes[81] = "UINT_2_10_10_10";
+	$gfgDataTypes[82] = "QUATERNION";
+
 
 	string $weightIndexingTypes[];
 	$weightIndexingTypes[0] = "BFS Alphabetical";
 	$weightIndexingTypes[1] = "BFS Default";
 	$weightIndexingTypes[2] = "DFS Alphabetical";
 	$weightIndexingTypes[3] = "DFS Default";
-	
+
 	string $indexDataTypes[];
 	$indexDataTypes[0] = "UINT8";
 	$indexDataTypes[1] = "UINT16";
 	$indexDataTypes[2] = "UINT32";
-	
+
 	string $animationLayoutTypes[];
 	$animationLayoutTypes[0] = "Keys of Bones";
 	$animationLayoutTypes[1] = "Bone of Keys";
@@ -292,31 +295,31 @@ global proc int GFGOptsExport ( string $parent,
 	string $quaternionLayoutTypes[];
 	$quaternionLayoutTypes[0] = "WXYZ";
 	$quaternionLayoutTypes[1] = "XYZW";
-	
+
 	string $animationInterpTypes[];
 	$animationInterpTypes[0] = "Slerp";
-	$animationInterpTypes[1] = "Cubic";	
-	
+	$animationInterpTypes[1] = "Cubic";
+
 	string $animationTypes[];
 	$animationTypes[0] = "With Hip Translate";
-	$animationTypes[1] = "Only Rotations";	
-	
+	$animationTypes[1] = "Only Rotations";
+
 	string $headerSting = "\"GPU Friendly Graphics\" File Format Exporter";
-	
+
 	// Option Saver
 	string $currentOptions;
-	
+
 	// Layout Stuff
 	int	$frameLayoutWidth = 490;
 	int $checkBoxLeftPad = 175;
 	int $comboBoxLeftPad = 125;
-	
+
 	int $groupingOrderTexWidth = 90;
 	int $groupingOrderSliderWidth = 400;
-	
+
 	int	$index;
 	int	$bResult = 1;
-	
+
 	// Interactive Ordering
 	global int $GFGorderingValues[];
 	$GFGorderingValues[0] = 0;		// Stores P
@@ -327,12 +330,12 @@ global proc int GFGOptsExport ( string $parent,
 	$GFGorderingValues[5] = 5;		// Stores W
 	$GFGorderingValues[6] = 6;		// Stores WI
 	$GFGorderingValues[7] = 7;		// Stores C
-	
+
 	global string $GFGsliders[];
 	global string $GFGorderingText;
-	
+
 	// Sow Options
-	if ($action == "post") 
+	if ($action == "post")
 	{
 		setParent $parent;
 
@@ -340,10 +343,10 @@ global proc int GFGOptsExport ( string $parent,
 		text -l $headerSting;
 		text -l "For more information visit";
 		text -hl true -l "http://yalcinerbora.github.io/GFG/";
-		
+
 		separator -style "none" -h 10;
 		// Vertex Export
-		frameLayout -label "Vertex Component Export" -collapsable false ; 
+		frameLayout -label "Vertex Component Export" -collapsable false ;
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				checkBox -label ("Export Normals") normOn;
 				checkBox -label ("Export UVs") uvOn;
@@ -354,46 +357,46 @@ global proc int GFGOptsExport ( string $parent,
 			setParent ..;
 		setParent ..;
 		// Materials
-		frameLayout -label "Material Export" -collapsable true ; 
+		frameLayout -label "Material Export" -collapsable true ;
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				checkBox -label ("Export Materials") matOn;
 				checkBox -label ("Empty Materials") matEmpty;
 			setParent ..;
 		setParent ..;
 		// Skeleton
-		frameLayout -label "Skeleton Export" -collapsable true ; 
+		frameLayout -label "Skeleton Export" -collapsable true ;
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				checkBox -label ("Export Skeleton") skelOn;
 			setParent ..;
 		setParent ..;
 		// Animation
-		frameLayout -label "Animation Export" -collapsable true ; 
+		frameLayout -label "Animation Export" -collapsable true ;
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				checkBox -label ("Export Animation") animOn;
 				optionMenu -label "Animation Type:" animType;
-					for ($index = 0; $index < size($animationTypes); $index++) 
+					for ($index = 0; $index < size($animationTypes); $index++)
 					{
 						menuItem -label $animationTypes[$index];
 					}
 				optionMenu -label "Animation Interpolation:" animInterp;
-					for ($index = 0; $index < size($animationInterpTypes); $index++) 
+					for ($index = 0; $index < size($animationInterpTypes); $index++)
 					{
 						menuItem -label $animationInterpTypes[$index];
 					}
 				optionMenu -label "Quaternion Layout:" quatLayout;
-					for ($index = 0; $index < size($quaternionLayoutTypes); $index++) 
+					for ($index = 0; $index < size($quaternionLayoutTypes); $index++)
 					{
 						menuItem -label $quaternionLayoutTypes[$index];
 					}
 				optionMenu -label "Animation Layout:" animLayout;
-					for ($index = 0; $index < size($animationLayoutTypes); $index++) 
+					for ($index = 0; $index < size($animationLayoutTypes); $index++)
 					{
 						menuItem -label $animationLayoutTypes[$index];
 					}
 			setParent ..;
 		setParent ..;
 		// Hierarchy
-		frameLayout -label "Hierarchy Export" -collapsable true ; 
+		frameLayout -label "Hierarchy Export" -collapsable true ;
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				checkBox -label ("Export Hierarchy") hierOn;
 			setParent ..;
@@ -402,20 +405,20 @@ global proc int GFGOptsExport ( string $parent,
 		frameLayout -label "Index Size" -collapsable true ;
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $checkBoxLeftPad;
 				optionMenu -label "Index Data Type:" iData;
-					for ($index = 0; $index < size($indexDataTypes); $index++) 
+					for ($index = 0; $index < size($indexDataTypes); $index++)
 					{
 						menuItem -label $indexDataTypes[$index];
 					}
 			setParent ..;
 		setParent ..;
 		// Vertex Component Data Types
-		frameLayout -label "Vertex Component Data Types" -collapsable true ; 
+		frameLayout -label "Vertex Component Data Types" -collapsable true ;
 			columnLayout -cal "center" -rowSpacing 5;
 				// Position
-				frameLayout -w $frameLayoutWidth -label "Vertex Position" -collapsable true ; 
+				frameLayout -w $frameLayoutWidth -label "Vertex Position" -collapsable true ;
 					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
 						optionMenu -label "Position Data Type:" vData;
-							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							for ($index = 0; $index < size($gfgDataTypes); $index++)
 							{
 								if ($gfgDataTypes[$index] == "HALF_3" ||
 									$gfgDataTypes[$index] == "FLOAT_3" ||
@@ -429,18 +432,18 @@ global proc int GFGOptsExport ( string $parent,
 								{
 									menuItem -en false -label $gfgDataTypes[$index];
 								}
-							}						
+							}
 						intFieldGrp -numberOfFields 1
-							-label "Position Grouping:" 
+							-label "Position Grouping:"
 							-value1 0
 							vLayout;
 					setParent ..;
 				setParent ..;
 				// Normal
-				frameLayout -w $frameLayoutWidth -label "Vertex Normal" -collapsable true ; 
+				frameLayout -w $frameLayoutWidth -label "Vertex Normal" -collapsable true ;
 					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
 						optionMenu -label "Normal Data Type:" vnData;
-							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							for ($index = 0; $index < size($gfgDataTypes); $index++)
 							{
 								if ($gfgDataTypes[$index] == "HALF_2" ||
 									$gfgDataTypes[$index] == "HALF_3" ||
@@ -465,18 +468,18 @@ global proc int GFGOptsExport ( string $parent,
 								{
 									menuItem -en false -label $gfgDataTypes[$index];
 								}
-							}						
+							}
 						intFieldGrp -numberOfFields 1
-							-label "Normal Grouping:" 
+							-label "Normal Grouping:"
 							-value1 0
 							vnLayout;
 					setParent ..;
 				setParent ..;
 				// UVs
-				frameLayout -w $frameLayoutWidth -label "Vertex UV" -collapsable true ; 
+				frameLayout -w $frameLayoutWidth -label "Vertex UV" -collapsable true ;
 					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
 						optionMenu -label "UV Data Type:" vuvData;
-							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							for ($index = 0; $index < size($gfgDataTypes); $index++)
 							{
 								if ($gfgDataTypes[$index] == "HALF_2" ||
 									$gfgDataTypes[$index] == "FLOAT_2" ||
@@ -493,18 +496,18 @@ global proc int GFGOptsExport ( string $parent,
 								{
 									menuItem -en false -label $gfgDataTypes[$index];
 								}
-							}						
+							}
 						intFieldGrp -numberOfFields 1
-							-label "UV Grouping:" 
+							-label "UV Grouping:"
 							-value1 0
 							vuvLayout;
 					setParent ..;
 				setParent ..;
 				// Tangent
-				frameLayout -w $frameLayoutWidth -label "Vertex Tangent" -collapsable true ; 
+				frameLayout -w $frameLayoutWidth -label "Vertex Tangent" -collapsable true ;
 					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
 						optionMenu -label "Tangent Data Type:" vtData;
-							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							for ($index = 0; $index < size($gfgDataTypes); $index++)
 							{
 								if ($gfgDataTypes[$index] == "HALF_2" ||
 									$gfgDataTypes[$index] == "HALF_3" ||
@@ -529,18 +532,18 @@ global proc int GFGOptsExport ( string $parent,
 								{
 									menuItem -en false -label $gfgDataTypes[$index];
 								}
-							}						
+							}
 						intFieldGrp -numberOfFields 1
-							-label "Tangent Grouping:" 
+							-label "Tangent Grouping:"
 							-value1 0
 							vtLayout;
 					setParent ..;
 				setParent ..;
 				// Binormal
-				frameLayout -w $frameLayoutWidth -label "Vertex Binormal" -collapsable true ; 
+				frameLayout -w $frameLayoutWidth -label "Vertex Binormal" -collapsable true ;
 					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
 						optionMenu -label "Binormal Data Type:" vbnData;
-							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							for ($index = 0; $index < size($gfgDataTypes); $index++)
 							{
 								if ($gfgDataTypes[$index] == "HALF_2" ||
 									$gfgDataTypes[$index] == "HALF_3" ||
@@ -565,18 +568,18 @@ global proc int GFGOptsExport ( string $parent,
 								{
 									menuItem -en false -label $gfgDataTypes[$index];
 								}
-							}						
+							}
 						intFieldGrp -numberOfFields 1
-							-label "Binormal Grouping:" 
+							-label "Binormal Grouping:"
 							-value1 0
 							vbnLayout;
 					setParent ..;
 				setParent ..;
 				// Weights
-				frameLayout -w $frameLayoutWidth -label "Vertex Weight" -collapsable true ; 
+				frameLayout -w $frameLayoutWidth -label "Vertex Weight" -collapsable true ;
 					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
 						optionMenu -label "Weight Data Type:" vwData;
-							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							for ($index = 0; $index < size($gfgDataTypes); $index++)
 							{
 								if ($gfgDataTypes[$index] == "HALF_1" ||
 									$gfgDataTypes[$index] == "HALF_2" ||
@@ -617,12 +620,12 @@ global proc int GFGOptsExport ( string $parent,
 								}
 							}
 						intFieldGrp -numberOfFields 1
-							-label "Weight Grouping:" 
+							-label "Weight Grouping:"
 							-value1 0
 							vwLayout;
-						separator -w 250 -style "in";	
+						separator -w 250 -style "in";
 						optionMenu -label "Weight Index Data Type:" vwiData;
-							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							for ($index = 0; $index < size($gfgDataTypes); $index++)
 							{
 								if ($gfgDataTypes[$index] == "UINT8_1" ||
 									$gfgDataTypes[$index] == "UINT8_2" ||
@@ -646,14 +649,14 @@ global proc int GFGOptsExport ( string $parent,
 								{
 									menuItem -en false -label $gfgDataTypes[$index];
 								}
-							}						
+							}
 						intFieldGrp -numberOfFields 1
-							-label "Weight Index Grouping:" 
+							-label "Weight Index Grouping:"
 							-value1 0
 							vwiLayout;
-						separator -w 250 -style "in";	
+						separator -w 250 -style "in";
 						optionMenu -label "Bone Indexing Method:" boneIndex;
-							for ($index = 0; $index < size($weightIndexingTypes); $index++) 
+							for ($index = 0; $index < size($weightIndexingTypes); $index++)
 							{
 								menuItem -label $weightIndexingTypes[$index];
 							}
@@ -666,10 +669,10 @@ global proc int GFGOptsExport ( string $parent,
 					setParent ..;
 				setParent ..;
 				// Color
-				frameLayout -w $frameLayoutWidth -label "Vertex Color" -collapsable true ; 
+				frameLayout -w $frameLayoutWidth -label "Vertex Color" -collapsable true ;
 					columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" $comboBoxLeftPad;
 						optionMenu -label "Color Data Type:" vcData;
-							for ($index = 0; $index < size($gfgDataTypes); $index++) 
+							for ($index = 0; $index < size($gfgDataTypes); $index++)
 							{
 								if ($gfgDataTypes[$index] == "HALF_3" ||
 									$gfgDataTypes[$index] == "FLOAT_3" ||
@@ -679,7 +682,7 @@ global proc int GFGOptsExport ( string $parent,
 									$gfgDataTypes[$index] == "UNORM16_3" ||
 									$gfgDataTypes[$index] == "UNORM32_3" ||
 									//$gfgDataTypes[$index] == "UINT_10F_11F_11F" ||
-									$gfgDataTypes[$index] == "UINT_2_10_10_10" 
+									$gfgDataTypes[$index] == "UINT_2_10_10_10"
 									)
 								{
 									menuItem -label $gfgDataTypes[$index];
@@ -688,18 +691,18 @@ global proc int GFGOptsExport ( string $parent,
 								{
 									menuItem -en false -label $gfgDataTypes[$index];
 								}
-							}						
+							}
 						intFieldGrp -numberOfFields 1
-							-label "Color Grouping:" 
+							-label "Color Grouping:"
 							-value1 0
 							vcLayout;
 					setParent ..;
 				setParent ..;
 			setParent ..;
 		setParent ..;
-				
+
 		// Vertex Grouping
-		frameLayout -label "Vertex Component Ordering" -collapsable true; 
+		frameLayout -label "Vertex Component Ordering" -collapsable true;
 			columnLayout -cal "center" -rowSpacing 5 -columnAttach "left" 20;
 				rowLayout -numberOfColumns 2 -columnWidth2 50 $groupingOrderSliderWidth;
 					text -label "P:";
@@ -734,260 +737,260 @@ global proc int GFGOptsExport ( string $parent,
 					$GFGsliders[7] = `intScrollBar -w $groupingOrderSliderWidth -min 0 -max 7 -value 7 -step 1 -largeStep 1 -cc "GFGAdjustSlider #1 $GFGorderingValues 7 $GFGsliders $GFGorderingText"`;
 				setParent ..;
 				$GFGorderingText = `text -w 470 -al "center" -label "Current Ordering: P<N<UV<T<B<W<WI<C" textOrderLabel`;
-		
+
 		// All Done Finally Now Populate
 		// Default Write Options
 		string $optionList[];
 		string $optionBreakDown[];
-	
+
 		$currentOptions = $initialSettings;
-		
-		if (size($currentOptions) > 0) 
+
+		if (size($currentOptions) > 0)
 		{
 			// Split from;
 			tokenize($currentOptions, ";", $optionList);
-			for ($index = 0; $index < size($optionList); $index++) 
+			for ($index = 0; $index < size($optionList); $index++)
 			{
 				tokenize($optionList[$index], "=", $optionBreakDown);
-				
+
 				// Export Normals
-				if ($optionBreakDown[0] == "normOn") 
+				if ($optionBreakDown[0] == "normOn")
 				{
-					if ($optionBreakDown[1] == "0") 
+					if ($optionBreakDown[1] == "0")
 					{
 						checkBox -e -v false normOn;
-					} 
-					else 
+					}
+					else
 					{
 						checkBox -e -v true normOn;
 					}
-				} 
+				}
 				// Export UVs
-				else if ($optionBreakDown[0] == "uvOn") 
+				else if ($optionBreakDown[0] == "uvOn")
 				{
-					if ($optionBreakDown[1] == "0") 
+					if ($optionBreakDown[1] == "0")
 					{
 						checkBox -e -v false uvOn;
-					} 
-					else 
+					}
+					else
 					{
 						checkBox -e -v true uvOn;
 					}
 				}
 				// Export Tangents
-				else if ($optionBreakDown[0] == "tangOn") 
+				else if ($optionBreakDown[0] == "tangOn")
 				{
-					if ($optionBreakDown[1] == "0") 
+					if ($optionBreakDown[1] == "0")
 					{
 						checkBox -e -v false tangOn;
-					} 
-					else 
+					}
+					else
 					{
 						checkBox -e -v true tangOn;
 					}
 				}
 				// Export Binormals
-				else if ($optionBreakDown[0] == "binormOn") 
+				else if ($optionBreakDown[0] == "binormOn")
 				{
-					if ($optionBreakDown[1] == "0") 
+					if ($optionBreakDown[1] == "0")
 					{
 						checkBox -e -v false binormOn;
-					} 
-					else 
+					}
+					else
 					{
 						checkBox -e -v true binormOn;
 					}
 				}
 				// Export Weights
-				else if ($optionBreakDown[0] == "weightOn") 
+				else if ($optionBreakDown[0] == "weightOn")
 				{
-					if ($optionBreakDown[1] == "0") 
+					if ($optionBreakDown[1] == "0")
 					{
 						checkBox -e -v false weightOn;
-					} 
-					else 
+					}
+					else
 					{
 						checkBox -e -v true weightOn;
 					}
 				}
 				// Export Colors
-				else if ($optionBreakDown[0] == "colorOn") 
+				else if ($optionBreakDown[0] == "colorOn")
 				{
-					if ($optionBreakDown[1] == "0") 
+					if ($optionBreakDown[1] == "0")
 					{
 						checkBox -e -v false colorOn;
-					} 
-					else 
+					}
+					else
 					{
 						checkBox -e -v true colorOn;
 					}
 				}
 				// Material Related
 				// Export Materials
-				else if ($optionBreakDown[0] == "matOn") 
+				else if ($optionBreakDown[0] == "matOn")
 				{
-					if ($optionBreakDown[1] == "0") 
+					if ($optionBreakDown[1] == "0")
 					{
 						checkBox -e -v false matOn;
-					} 
-					else 
+					}
+					else
 					{
 						checkBox -e -v true matOn;
 					}
 				}
 				// Export Materials as Empty
-				else if ($optionBreakDown[0] == "matEmpty") 
+				else if ($optionBreakDown[0] == "matEmpty")
 				{
-					if ($optionBreakDown[1] == "0") 
+					if ($optionBreakDown[1] == "0")
 					{
 						checkBox -e -v false matEmpty;
-					} 
-					else 
+					}
+					else
 					{
 						checkBox -e -v true matEmpty;
 					}
 				}
 				// Misc
 				// Export Hierarchy
-				else if ($optionBreakDown[0] == "hierOn") 
+				else if ($optionBreakDown[0] == "hierOn")
 				{
-					if ($optionBreakDown[1] == "0") 
+					if ($optionBreakDown[1] == "0")
 					{
 						checkBox -e -v false hierOn;
-					} 
-					else 
+					}
+					else
 					{
 						checkBox -e -v true hierOn;
 					}
 				}
 				// Index Data Type
-				else if ($optionBreakDown[0] == "iData") 
+				else if ($optionBreakDown[0] == "iData")
 				{
 					optionMenu -e -sl (((int)$optionBreakDown[1])+1) iData;
 				}
-				
+
 				// Export Skeletons
-				else if ($optionBreakDown[0] == "skelOn") 
+				else if ($optionBreakDown[0] == "skelOn")
 				{
-					if ($optionBreakDown[1] == "0") 
+					if ($optionBreakDown[1] == "0")
 					{
 						checkBox -e -v false skelOn;
-					} 
-					else 
+					}
+					else
 					{
 						checkBox -e -v true skelOn;
 					}
 				}
 				// Export Animations
-				else if ($optionBreakDown[0] == "animOn") 
+				else if ($optionBreakDown[0] == "animOn")
 				{
-					if ($optionBreakDown[1] == "0") 
+					if ($optionBreakDown[1] == "0")
 					{
 						checkBox -e -v false animOn;
-					} 
-					else 
+					}
+					else
 					{
 						checkBox -e -v true animOn;
 					}
 				}
-				else if ($optionBreakDown[0] == "animType") 
+				else if ($optionBreakDown[0] == "animType")
 				{
 					optionMenu -e -sl (((int)$optionBreakDown[1])+1) animType;
 				}
-				else if ($optionBreakDown[0] == "animInterp") 
+				else if ($optionBreakDown[0] == "animInterp")
 				{
 					optionMenu -e -sl (((int)$optionBreakDown[1])+1) animInterp;
 				}
-				else if ($optionBreakDown[0] == "animLayout") 
+				else if ($optionBreakDown[0] == "animLayout")
 				{
 					optionMenu -e -sl (((int)$optionBreakDown[1])+1) animLayout;
 				}
-				else if ($optionBreakDown[0] == "quatLayout") 
+				else if ($optionBreakDown[0] == "quatLayout")
 				{
 					optionMenu -e -sl (((int)$optionBreakDown[1])+1) quatLayout;
 				}
 				//***************************//
 				// Vertex
 				// Position Options
-				else if ($optionBreakDown[0] == "vData") 
+				else if ($optionBreakDown[0] == "vData")
 				{
 					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vData;
 				}
-				else if ($optionBreakDown[0] == "vLayout") 
+				else if ($optionBreakDown[0] == "vLayout")
 				{
 					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vLayout;
 				}
 				// Nromal Options
-				else if ($optionBreakDown[0] == "vnData") 
+				else if ($optionBreakDown[0] == "vnData")
 				{
 					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vnData;
 				}
-				else if ($optionBreakDown[0] == "vnLayout") 
+				else if ($optionBreakDown[0] == "vnLayout")
 				{
 					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vnLayout;
 				}
 				// UV Options
-				else if ($optionBreakDown[0] == "vuvData") 
+				else if ($optionBreakDown[0] == "vuvData")
 				{
 					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vuvData;
 				}
-				else if ($optionBreakDown[0] == "vuvLayout") 
+				else if ($optionBreakDown[0] == "vuvLayout")
 				{
 					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vuvLayout;
 				}
 				// Tangent Options
-				else if ($optionBreakDown[0] == "vtData") 
+				else if ($optionBreakDown[0] == "vtData")
 				{
 					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vtData;
 				}
-				else if ($optionBreakDown[0] == "vtLayout") 
+				else if ($optionBreakDown[0] == "vtLayout")
 				{
 					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vtLayout;
 				}
 				// Binormal Options
-				else if ($optionBreakDown[0] == "vbnData") 
+				else if ($optionBreakDown[0] == "vbnData")
 				{
 					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vbnData;
 				}
-				else if ($optionBreakDown[0] == "vbnLayout") 
+				else if ($optionBreakDown[0] == "vbnLayout")
 				{
 					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vbnLayout;
 				}
 				// Weight Options
-				else if ($optionBreakDown[0] == "vwData") 
+				else if ($optionBreakDown[0] == "vwData")
 				{
 					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vwData;
 				}
-				else if ($optionBreakDown[0] == "vwLayout") 
+				else if ($optionBreakDown[0] == "vwLayout")
 				{
 					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vwLayout;
 				}
-				else if ($optionBreakDown[0] == "vwiData") 
+				else if ($optionBreakDown[0] == "vwiData")
 				{
 					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vwiData;
 				}
-				else if ($optionBreakDown[0] == "vwiLayout") 
+				else if ($optionBreakDown[0] == "vwiLayout")
 				{
 					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vwiLayout;
 				}
-				else if ($optionBreakDown[0] == "boneTraversal") 
+				else if ($optionBreakDown[0] == "boneTraversal")
 				{
 					optionMenu -e -sl ((int)$optionBreakDown[1]+1) boneIndex;
 				}
-				else if ($optionBreakDown[0] == "influence") 
+				else if ($optionBreakDown[0] == "influence")
 				{
 					intSliderGrp -e -value ((int)$optionBreakDown[1]) influence;
 				}
 				// Color Options
-				else if ($optionBreakDown[0] == "vcData") 
+				else if ($optionBreakDown[0] == "vcData")
 				{
 					optionMenu -e -sl (((int)$optionBreakDown[1])+1) vcData;
 				}
-				else if ($optionBreakDown[0] == "vcLayout") 
+				else if ($optionBreakDown[0] == "vcLayout")
 				{
 					intFieldGrp -e -value1 ((int)$optionBreakDown[1]) vcLayout;
 				}
-				else if ($optionBreakDown[0] == "groupLayout") 
+				else if ($optionBreakDown[0] == "groupLayout")
 				{
 					// Adjust Slider According to the string
 					GFGUnpackGroupLayout($GFGsliders, $GFGorderingText, $GFGorderingValues, $optionBreakDown[1]);
@@ -995,16 +998,16 @@ global proc int GFGOptsExport ( string $parent,
 			}
 		}
 		$bResult = 1;
-	} 
+	}
 	// Write Options
-	else if ($action == "query") 
+	else if ($action == "query")
 	{
 		// Normal Export
 		if (`checkBox -q -v normOn`)
 		{
 			$currentOptions = $currentOptions + "normOn=1";
-		} 
-		else 
+		}
+		else
 		{
 			$currentOptions = $currentOptions + "normOn=0";
 		}
@@ -1012,8 +1015,8 @@ global proc int GFGOptsExport ( string $parent,
 		if (`checkBox -q -v uvOn`)
 		{
 			$currentOptions = $currentOptions + ";uvOn=1";
-		} 
-		else 
+		}
+		else
 		{
 			$currentOptions = $currentOptions + ";uvOn=0";
 		}
@@ -1021,8 +1024,8 @@ global proc int GFGOptsExport ( string $parent,
 		if (`checkBox -q -v tangOn`)
 		{
 			$currentOptions = $currentOptions + ";tangOn=1";
-		} 
-		else 
+		}
+		else
 		{
 			$currentOptions = $currentOptions + ";tangOn=0";
 		}
@@ -1030,8 +1033,8 @@ global proc int GFGOptsExport ( string $parent,
 		if (`checkBox -q -v binormOn`)
 		{
 			$currentOptions = $currentOptions + ";binormOn=1";
-		} 
-		else 
+		}
+		else
 		{
 			$currentOptions = $currentOptions + ";binormOn=0";
 		}
@@ -1039,8 +1042,8 @@ global proc int GFGOptsExport ( string $parent,
 		if (`checkBox -q -v weightOn`)
 		{
 			$currentOptions = $currentOptions + ";weightOn=1";
-		} 
-		else 
+		}
+		else
 		{
 			$currentOptions = $currentOptions + ";weightOn=0";
 		}
@@ -1048,8 +1051,8 @@ global proc int GFGOptsExport ( string $parent,
 		if (`checkBox -q -v colorOn`)
 		{
 			$currentOptions = $currentOptions + ";colorOn=1";
-		} 
-		else 
+		}
+		else
 		{
 			$currentOptions = $currentOptions + ";colorOn=0";
 		}
@@ -1058,8 +1061,8 @@ global proc int GFGOptsExport ( string $parent,
 		if (`checkBox -q -v matOn`)
 		{
 			$currentOptions = $currentOptions + ";matOn=1";
-		} 
-		else 
+		}
+		else
 		{
 			$currentOptions = $currentOptions + ";matOn=0";
 		}
@@ -1067,8 +1070,8 @@ global proc int GFGOptsExport ( string $parent,
 		if (`checkBox -q -v matEmpty`)
 		{
 			$currentOptions = $currentOptions + ";matEmpty=1";
-		} 
-		else 
+		}
+		else
 		{
 			$currentOptions = $currentOptions + ";matEmpty=0";
 		}
@@ -1077,8 +1080,8 @@ global proc int GFGOptsExport ( string $parent,
 		if (`checkBox -q -v hierOn`)
 		{
 			$currentOptions = $currentOptions + ";hierOn=1";
-		} 
-		else 
+		}
+		else
 		{
 			$currentOptions = $currentOptions + ";hierOn=0";
 		}
@@ -1086,8 +1089,8 @@ global proc int GFGOptsExport ( string $parent,
 		if (`checkBox -q -v skelOn`)
 		{
 			$currentOptions = $currentOptions + ";skelOn=1";
-		} 
-		else 
+		}
+		else
 		{
 			$currentOptions = $currentOptions + ";skelOn=0";
 		}
@@ -1095,8 +1098,8 @@ global proc int GFGOptsExport ( string $parent,
 		if (`checkBox -q -v animOn`)
 		{
 			$currentOptions = $currentOptions + ";animOn=1";
-		} 
-		else 
+		}
+		else
 		{
 			$currentOptions = $currentOptions + ";animOn=0";
 		}
@@ -1126,24 +1129,24 @@ global proc int GFGOptsExport ( string $parent,
 		// Weight Options
 		$currentOptions = $currentOptions + ";vwData=" + (`optionMenu -q -sl vwData` - 1);
 		$currentOptions = $currentOptions + ";vwLayout=" + `intFieldGrp -q -v1 vwLayout`;
-		
+
 		$currentOptions = $currentOptions + ";vwiData=" + (`optionMenu -q -sl vwiData` - 1);
 		$currentOptions = $currentOptions + ";vwiLayout=" + `intFieldGrp -q -v1 vwiLayout`;
-		
+
 		$currentOptions = $currentOptions + ";boneTraversal=" + (`optionMenu -q -sl boneIndex` - 1);
 		$currentOptions = $currentOptions + ";influence=" + `intSliderGrp -q -value influence`;
-		
+
 		// Color Options
 		$currentOptions = $currentOptions + ";vcData=" + (`optionMenu -q -sl vcData` - 1);
 		$currentOptions = $currentOptions + ";vcLayout=" + `intFieldGrp -q -v1 vcLayout`;
-		
+
 		string $labelAll = `text -q -l textOrderLabel`;
 		$currentOptions = $currentOptions + ";groupLayout=" + substring($labelAll, 19, size($labelAll));
-		
+
 		eval($resultCallback+" \""+$currentOptions+"\"");
 		$bResult = 1;
-	} 
-	else 
+	}
+	else
 	{
 		// Error
 		$bResult = 0;

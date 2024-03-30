@@ -594,7 +594,7 @@ uint64_t GFGFileLoader::AllAnimationKeyframeDataSize()const
 	{
 		for(size_t i = 0; i < header.animations.size(); i++)
 		{
-			result += AnimationKeyframeDataSize(i);
+			result += AnimationKeyframeDataSize(static_cast<uint32_t>(i));
 		}
 	}
 	return result;

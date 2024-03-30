@@ -177,6 +177,10 @@ enum class GFGDataType : uint32_t
 
 	// Voxel Related
 	UINT_2_10_10_10,	// Packed Data, LSB to MSB is 10 to 2, unpacked format is 3 integers between 0 1023, Last 2 bit is unused
+
+	// Special To tangent space converter
+	QUATERNION,			// Quaternion: {w, x, y, z}
+
 	//------------------------------------//
 	//------------------------------------//
 	END					// For Static Asserting the size array
@@ -268,6 +272,7 @@ inline std::ostream& operator<<(std::ostream& os, const GFGDataType& dt)
 		"UINT8_4_4",
 		"UINT16_2_4",
 		"UINT_2_10_10_10",
+		"QUATERNION",
 		"END"
 	};
 	return os << values[static_cast<int>(dt)];
