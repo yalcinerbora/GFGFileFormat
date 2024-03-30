@@ -445,7 +445,10 @@ static const size_t GFGDataTypeByteSize[]
 	16,		//UINT16_2_4,			// 16 bit integer index in a 4 component 32 bit type
 									// holds 8 16 bit integer values
 									// Voxel Related
-	4		//UINT_2_10_10_10,		// Packed Data, LSB to MSB is 10 to 2, unpacked format is 3 integers between 0 1023, Last 2 bit is unused
+	4,		//UINT_2_10_10_10,		// Packed Data, LSB to MSB is 10 to 2, unpacked format is 3 integers between 0 1023, Last 2 bit is unused
+	
+	// Special
+	4 * 4	//QUATERNION			// Quaternion, directly embeds to tangent space transformation
 	//------------------------------------//
 	//------------------------------------//
 };
