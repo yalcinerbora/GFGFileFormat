@@ -156,7 +156,8 @@ class GFGHeader
 		GFGTransformList				bonetransformData;			// This should be "bind pose"
 
 		// Utility
-		void							CalculateDataOffsets();
+		void							CalculateDataOffsets(const std::vector<size_t>& meshVerticesByteSizeList,
+															 const std::vector<size_t>& meshIndicesByteSizeList);
 		void							Clear();
 };
 #endif //__GFG_HEADER_H__

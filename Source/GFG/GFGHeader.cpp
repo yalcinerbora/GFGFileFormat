@@ -1,6 +1,7 @@
 #include "GFGHeader.h"
 
-void GFGHeader::CalculateDataOffsets()
+void GFGHeader::CalculateDataOffsets(const std::vector<size_t>& meshVerticesByteSizeList,
+									 const std::vector<size_t>& meshIndicesByteSizeList)
 {
 	// Clear Some Data
 	meshList.meshLocations.clear();
@@ -101,25 +102,20 @@ void GFGHeader::CalculateDataOffsets()
 	// Calculate Mesh Offsets
 	// Calculate Mesh Vertex And Index Offsets
 	// Vertex Offsets
-	for(GFGMeshHeader& mesh : meshes)
+
+	for(size_t i = 0; i < meshes.size(); i++)
 	{
+		GFGMeshHeader& mesh = meshes[i];
 		mesh.headerCore.vertexStart = dataOffsetPtr;
 		mesh.headerCore.componentCount = static_cast<uint32_t>(mesh.components.size());
-
-		// Calculate Vertex Size
-		size_t size = 0;
-		for(GFGVertexComponent& component : mesh.components)
-		{
-			size += GFGDataTypeByteSize[static_cast<int>(component.dataType)];
-		}
-		// Move ptr to next mesh
-		dataOffsetPtr += mesh.headerCore.vertexCount * size;
+		dataOffsetPtr += meshVerticesByteSizeList[i];
 	}
 	// Index Offsets
-	for(GFGMeshHeader& mesh : meshes)
+	for(size_t i = 0; i < meshes.size(); i++)
 	{
+		GFGMeshHeader& mesh = meshes[i];
 		mesh.headerCore.indexStart = dataOffsetPtr;
-		dataOffsetPtr += mesh.headerCore.indexSize * mesh.headerCore.indexCount;
+		dataOffsetPtr += meshIndicesByteSizeList[i];
 	}
 
 	// Material

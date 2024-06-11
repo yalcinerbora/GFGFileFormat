@@ -1,5 +1,6 @@
 #include "GFGFileExporter.h"
 #include <cassert>
+#include <algorithm>
 
 // Constructors & Destructor
 GFGFileWriterSTL::GFGFileWriterSTL(std::ofstream& fileWriter)
@@ -124,6 +125,7 @@ uint32_t GFGFileExporter::AddMesh(uint32_t,
 	// Now Can Add Actual Data
 	meshData.emplace_back(vertexData);
 	if(indexData) meshIndexData.emplace_back(*indexData);
+	else meshIndexData.emplace_back();
 
 	return meshID;
 }
@@ -229,7 +231,21 @@ void GFGFileExporter::Clear()
 void GFGFileExporter::Write(GFGFileWriterI& writer)
 {
 	// Before Export Calculate Header Offsets
-	gfgHeader.CalculateDataOffsets();
+	assert(meshData.size() == meshIndexData.size());
+	std::vector<size_t> vertByteSize(meshData.size());
+	std::vector<size_t> indexByteSize(meshData.size());
+	std::transform(meshData.cbegin(), meshData.cend(),
+				   vertByteSize.begin(), [](const auto& v)
+	{
+		return v.size();
+	});
+	std::transform(meshIndexData.cbegin(), meshIndexData.cend(),
+				   indexByteSize.begin(), [](const auto& v)
+	{
+		return v.size();
+	});
+	gfgHeader.CalculateDataOffsets(vertByteSize,
+								   indexByteSize);
 
 	// All Stuff is Ready
 	GFGHeader& header = gfgHeader;
