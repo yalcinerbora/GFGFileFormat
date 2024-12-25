@@ -69,36 +69,33 @@ struct GFGMeshHeaderCore
 {
 	// Size Values
 	uint64_t	vertexCount;	// # of vertices
-	uint64_t	indexCount;		// # of indices
-	uint32_t	indexSize;		// individual Index Size (in bytes)
-
+	uint64_t	indexCount;	// # of indices
+	uint32_t	indexSize;	// individual Index Size (in bytes)
 	// Topology
-	GFGTopology topology;       // TRIANGLE, TRIANGLE_STRIP, LINE or POINT
-
+	GFGTopology 	topology;       // TRIANGLE, TRIANGLE_STRIP, LINE or POINT
 	uint64_t	vertexStart;	// Starting Location of Vertex Data
-                                // (byte offset relative to Data Start)
-	uint64_t	indexStart;		// Starting Location of Index Data
-                                // (byte offset relative to Data Start)
-	GFGAABB		aabb;			// Axis Aligned bounding box (object space)
-
+                                	// (byte offset relative to Data Start)
+	uint64_t	indexStart;	// Starting Location of Index Data
+                                	// (byte offset relative to Data Start)
+	GFGAABB		aabb;		// Axis Aligned bounding box (object space)
 	// Components
-	uint32_t			componentCount;	// # of components
+	uint32_t	componentCount;	// # of components
 };
 
 // Components of this mesh (n)
 struct GFGVertexComponent
 {
-	GFGDataType	            dataType;		// Type of the data
-                                            // (FLOAT_3, FLOAT_2 etc.)
-											// Size of this data type (in bytes) can
-                                            // be fetched using dataType
-	GFGVertexComponentLogic logic;			// Component Logic
-                                            // (POSITION, NORMAL UV etc.)
-	uint64_t				startOffset;	// Start location of this data structure
-                                            // relative to vertexStart (in bytes)
-	uint64_t				internalOffset;	// Start location of this data
-                                            // relative to startOffset (in bytes)
-	uint64_t				stride;			// Stride of this data structure (in bytes)
+	GFGDataType		dataType; 	// Type of the data
+					  	// (FLOAT_3, FLOAT_2 etc.)
+					  	// Size of this data type (in bytes) can
+					  	// be fetched using dataType
+	GFGVertexComponentLogic logic;	  	// Component Logic
+					  	// (POSITION, NORMAL UV etc.)
+	uint64_t		startOffset;	// Start location of this data structure
+                                            	// relative to vertexStart (in bytes)
+	uint64_t		internalOffset;	// Start location of this data
+                                            	// relative to startOffset (in bytes)
+	uint64_t		stride;		// Stride of this data structure (in bytes)
 };
 ```
 
