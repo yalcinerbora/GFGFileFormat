@@ -16,10 +16,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Ask for Maya include directiories
 if(GFG_BUILD_MAYA_PLUG_IN)
-    set(GFG_MAYA_INCLUDE_DIRECTORY "C:/Program Files/Autodesk/Maya2024/include" CACHE STRING "Maya plug-in include directory")
-    set(GFG_MAYA_LIB_DIRECTORY "C:/Program Files/Autodesk/Maya2024/lib" CACHE STRING "Maya plug-in lib directory")
+    set(GFG_MAYA_INSTALL_DIRECTORY "C:/Program Files/Autodesk/Maya2025" CACHE STRING "Maya plug-in include directory")
 endif()
 
+set(GFG_MAYA_INCLUDE_DIRECTORY ${GFG_MAYA_INSTALL_DIRECTORY}/include)
+set(GFG_MAYA_LIB_DIRECTORY ${GFG_MAYA_INSTALL_DIRECTORY}/lib)
 
 project(GPUFriendlyGraphics LANGUAGES CXX)
 

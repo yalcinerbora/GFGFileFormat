@@ -53,17 +53,17 @@ set_target_properties(GFGMaya PROPERTIES
                       POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(GFGMaya
-                        PRIVATE
-                            OpenMayaAnim
-                            OpenMaya
-                            Foundation
-                            GFGFileIO
+                      PRIVATE
+                        OpenMayaAnim
+                        OpenMaya
+                        Foundation
+                        GFGFileIO
                       ${PLATFORM_SPEC_LIBRARIES})
 
 # Only expose MLL and scripts
-# if(GFG_INSTALL)
-#     install(TARGETS GFGMaya
-#             DESTINATION ${CMAKE_INSTALL_BINDIR})
-#     install(FILES ${SRC_MEL_SCRIPTS}
-#             DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
-# endif()
+if(GFG_INSTALL)
+    install(TARGETS GFGMaya
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
+    install(FILES ${SRC_MEL_SCRIPTS}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
+endif()

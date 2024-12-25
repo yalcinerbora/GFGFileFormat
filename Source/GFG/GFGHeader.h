@@ -132,7 +132,7 @@ class GFGHeader
 		// This also shows order of the header
 		uint32_t						fourCC = GFGFourCC;	// From MSB to LSB " GFG"
 		uint64_t						headerSize;			// (in bytes) Header Size also show the data start location
-		uint64_t						transformJump;		// Direct Jump to transform headers (convinience)
+		uint64_t						transformJump;		// Direct Jump to transform headers (convenience)
 
 		GFGMeshJumpList					meshList;			// Fast Jumping to the headers (since headers are variable sized)
 		GFGMaterialJumpList				materialList;		// Fast Jumping to the headers (since headers are variable sized)
